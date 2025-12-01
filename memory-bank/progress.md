@@ -5,24 +5,24 @@
 
 - [x] Create `AGENTS.MD` and define Memory Bank process.
 - [x] Define project brief, product context, system patterns, tech context, and active context.
-- [ ] Create repository folder structure (`frontend/`, `backend/`, `memory-bank/`).
-- [ ] Initialize frontend React app (Vite or CRA) with Tailwind and base theming.
-- [ ] Initialize backend Express app with a basic `/health` endpoint.
-- [ ] Set up Docker Compose with PostgreSQL (and optional backend service).
-- [ ] Initialize Prisma and connect to Postgres.
-- [ ] Define initial Prisma schema (User, Url, UrlReport, Game, GameSession, Score/Leaderboard tables).
-- [ ] Document local development setup in `README.md`.
+- [x] Create repository folder structure (`frontend/`, `backend/`, `memory-bank/`).
+- [x] Initialize frontend React app (Vite or CRA) with Tailwind and base theming.
+- [x] Initialize backend Express app with a basic `/health` endpoint.
+- [x] Set up Docker Compose with PostgreSQL (and optional backend service).
+- [x] Initialize Prisma and connect to Postgres.
+- [x] Define initial Prisma schema (User, Url, UrlReport, Game, GameSession, Score/Leaderboard tables).
+- [x] Document local development setup in `README.md`.
 
 ## Phase 1 – URL Scanner MVP
 **Goal:** Deliver a working end-to-end URL scan feature with basic rules and community reporting.
 
-- [ ] Implement `/api/scan` endpoint (accept URL, normalize, apply heuristics, read report data).
-- [ ] Implement `/api/report-url` endpoint (allow authenticated users to flag suspicious URLs).
-- [ ] Create database queries for storing scans and reports.
-- [ ] Basic rule-based detection (suspicious patterns, domains, etc.).
-- [ ] Frontend URL scanner page mirroring the provided design (input + SAFE/WARNING/UNKNOWN cards).
-- [ ] Display scan results with explanations and a “Report this URL” action.
-- [ ] Add minimal rate limiting/abuse protection on scan/report endpoints.
+- [x] Implement `/api/scan` endpoint (accept URL, normalize, apply heuristics, read report data).
+- [x] Implement `/api/report-url` endpoint (allow authenticated users to flag suspicious URLs).
+- [x] Create database queries for storing scans and reports.
+- [x] Basic rule-based detection (suspicious patterns, domains, etc.).
+- [x] Frontend URL scanner page mirroring the provided design (input + SAFE/WARNING/UNKNOWN cards).
+- [x] Display scan results with explanations and a “Report this URL” action.
+- [x] Add minimal rate limiting/abuse protection on scan/report endpoints.
 
 ## Phase 2 – Education & Gamification
 **Goal:** Build 5–6 educational experiences and a scoring system.

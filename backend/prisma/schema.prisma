@@ -22,12 +22,13 @@ model User {
 }
 
 model Url {
-  id            String       @id @default(cuid())
+  id            String         @id @default(cuid())
   originalUrl   String
-  normalizedUrl String       @unique
-  createdAt     DateTime     @default(now())
+  normalizedUrl String         @unique
+  createdAt     DateTime       @default(now())
 
-  reports       UrlReport[]
+  reports         UrlReport[]
+  threatIntelHits ThreatIntelHit[]
 }
 
 model UrlReport {
@@ -62,4 +63,14 @@ model GameSession {
   score       Int
   startedAt   DateTime @default(now())
   completedAt DateTime?
+}
+
+model ThreatIntelHit {
+  id        String   @id @default(cuid())
+  provider  String
+  verdict   String
+  createdAt DateTime @default(now())
+
+  urlId String
+  url   Url @relation(fields: [urlId], references: [id])
 }
