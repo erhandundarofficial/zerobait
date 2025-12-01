@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  googleId  String?  @unique
+  imageUrl  String?
+  score     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameSessions GameSession[]
+  urlReports   UrlReport[]
+}
+
+model Url {
+  id            String       @id @default(cuid())
+  originalUrl   String
+  normalizedUrl String       @unique
+  createdAt     DateTime     @default(now())
+
+  reports       UrlReport[]
+}
+
+model UrlReport {
+  id        String   @id @default(cuid())
+  reason    String?
+  createdAt DateTime @default(now())
+
+  urlId  String
+  url    Url   @relation(fields: [urlId], references: [id])
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id])
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  title       String
+  description String
+  type        String
+  createdAt   DateTime @default(now())
+
+  sessions GameSession[]
+}
+
+model GameSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [id])
+  score       Int
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+}

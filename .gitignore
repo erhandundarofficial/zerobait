@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Logs
+logs
+*.log
+
+# Build outputs
+frontend/dist/
+backend/dist/
+
+# Environment
+.env
+.env.*
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/migrations/*/steps.json
+
+# Docker
+*.pid
