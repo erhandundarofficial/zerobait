@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../auth/AuthProvider'
 
 type ProgressStore = {
   totalScore: number
@@ -14,8 +15,10 @@ type GameListItem = {
 }
 
 export default function ProgressPage() {
+  const { user } = useAuth()
   const [games, setGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [serverPerGame, setServerPerGame] = useState<Record<string, { bestScore: number; attempts: number; lastScore: number; lastPlayedAt: string | null }> | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -37,19 +40,47 @@ export default function ProgressPage() {
     }
   }, [])
 
+  function getOrCreatePlayerId(): string {
+    let id = localStorage.getItem('zb_player_id')
+    if (!id) {
+      id = 'player_' + Math.random().toString(36).slice(2, 10)
+      localStorage.setItem('zb_player_id', id)
+    }
+    return id
+  }
+
+  function getProgressStorageKey(currentUserId?: string | null): string {
+    const owner = currentUserId || getOrCreatePlayerId()
+    return `zb_progress_${owner}`
+  }
+
   const progress: ProgressStore = useMemo(() => {
     try {
-      const raw = localStorage.getItem('zb_progress')
+      const storageKey = getProgressStorageKey(user?.id)
+      const raw = localStorage.getItem(storageKey)
       if (!raw) return { totalScore: 0, games: {} }
       const parsed = JSON.parse(raw) as ProgressStore
       return parsed ?? { totalScore: 0, games: {} }
     } catch {
       return { totalScore: 0, games: {} }
     }
-  }, [loading])
+  }, [loading, user?.id])
 
   const rows = useMemo(() => {
     const list = games.map((g) => {
+      // Prefer server per-game stats when authenticated; otherwise use local namespaced stats
+      const sp = serverPerGame?.[g.key]
+      if (user && sp) {
+        return {
+          key: g.key,
+          title: g.title,
+          difficulty: g.difficulty,
+          bestScore: sp.bestScore ?? 0,
+          attempts: sp.attempts ?? 0,
+          lastScore: sp.lastScore ?? 0,
+          lastPlayedAt: sp.lastPlayedAt ?? '-',
+        }
+      }
       const p = progress.games[g.key]
       return {
         key: g.key,
@@ -58,7 +89,7 @@ export default function ProgressPage() {
         bestScore: p?.bestScore ?? 0,
         attempts: p?.attempts ?? 0,
         lastScore: p?.lastScore ?? 0,
-        lastPlayedAt: p?.lastPlayedAt ?? '-'
+        lastPlayedAt: p?.lastPlayedAt ?? '-',
       }
     })
     // Include any progress entries not in current game list (fallback)
@@ -71,6 +102,34 @@ export default function ProgressPage() {
     return list
   }, [games, progress])
 
+  // When authenticated, fetch server-side per-game progress for accurate stats
+  useEffect(() => {
+    let active = true
+    async function loadServerProgress() {
+      if (!user) {
+        setServerPerGame(null)
+        return
+      }
+      try {
+        const token = localStorage.getItem('zb_token')
+        if (!token) return
+        const res = await fetch('http://localhost:4000/api/progress', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await res.json()
+        if (!res.ok) return
+        const perGame = data.perGame as Record<string, { bestScore: number; attempts: number; lastScore: number; lastPlayedAt: string | null }>
+        if (active) setServerPerGame(perGame)
+      } catch {
+        // ignore network/server errors and keep local fallback
+      }
+    }
+    loadServerProgress()
+    return () => {
+      active = false
+    }
+  }, [user?.id])
+
   return (
     <div className="w-full max-w-5xl mx-auto">
       <div className="text-center">
@@ -81,8 +140,14 @@ export default function ProgressPage() {
       </div>
 
       <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
-        <div className="text-2xl font-semibold text-emerald-300">Total Score: {progress.totalScore}</div>
-        <p className="text-gray-300 text-sm mt-1">Scores increase as you play and improve. Replay games to beat your best scores.</p>
+        <div className="text-2xl font-semibold text-emerald-300">
+          Total Score: {user ? user.score : progress.totalScore}
+        </div>
+        <p className="text-gray-300 text-sm mt-1">
+          {user
+            ? 'This is your account score, saved to the server.'
+            : 'This is a local score (guest). Sign up to save progress across devices.'}
+        </p>
       </div>
 
       <div className="mt-8">

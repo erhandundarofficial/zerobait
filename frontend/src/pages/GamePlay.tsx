@@ -24,8 +24,14 @@ function getOrCreatePlayerId(): string {
   return id
 }
 
-function saveProgress(gameKey: string, score: number) {
-  let raw = localStorage.getItem('zb_progress')
+function getProgressStorageKey(currentUserId?: string | null): string {
+  const owner = currentUserId || getOrCreatePlayerId()
+  return `zb_progress_${owner}`
+}
+
+function saveProgress(gameKey: string, score: number, currentUserId?: string | null) {
+  const storageKey = getProgressStorageKey(currentUserId)
+  let raw = localStorage.getItem(storageKey)
   const now = new Date().toISOString()
   let store: ProgressStore
   if (!raw) {
@@ -42,7 +48,7 @@ function saveProgress(gameKey: string, score: number) {
   const attempts = (prev?.attempts ?? 0) + 1
   store.games[gameKey] = { bestScore: best, attempts, lastScore: score, lastPlayedAt: now }
   store.totalScore = (store.totalScore ?? 0) + score
-  localStorage.setItem('zb_progress', JSON.stringify(store))
+  localStorage.setItem(storageKey, JSON.stringify(store))
 }
 
 type PublicGameContent = {
@@ -56,7 +62,7 @@ type PublicGameContent = {
 
 export default function GamePlayPage() {
   const { key } = useParams<{ key: string }>()
-  const { user } = useAuth()
+  const { user, addScore } = useAuth()
   const [game, setGame] = useState<PublicGameContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -108,7 +114,11 @@ export default function GamePlayPage() {
       if (!res.ok) throw new Error(data.error || 'Submission failed')
       const s = data.score as number
       setScore(s)
-      saveProgress(gameKey, s)
+      saveProgress(gameKey, s, user?.id)
+      if (user?.id) {
+        // update UI user score immediately
+        addScore(s)
+      }
     } catch (e: any) {
       setError(e?.message || 'Submission failed')
     } finally {

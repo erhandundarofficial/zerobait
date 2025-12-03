@@ -14,6 +14,7 @@ type AuthContextValue = {
   login: (username: string, password: string) => Promise<void>
   register: (username: string, password: string, email?: string) => Promise<void>
   logout: () => void
+  addScore: (delta: number) => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -86,8 +87,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('zb_user')
   }
 
+  const addScore = (delta: number) => {
+    setUser((u) => {
+      if (!u) return u
+      const updated = { ...u, score: u.score + delta }
+      localStorage.setItem('zb_user', JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const value: AuthContextValue = useMemo(
-    () => ({ user, token, loading, login, register, logout }),
+    () => ({ user, token, loading, login, register, logout, addScore }),
     [user, token, loading],
   )
 
