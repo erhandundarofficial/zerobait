@@ -8,6 +8,42 @@ type PublicQuestion = {
   explanation?: string
 }
 
+// Simple client-side progress tracking
+type ProgressStore = {
+  totalScore: number
+  games: Record<string, { bestScore: number; attempts: number; lastScore: number; lastPlayedAt: string }>
+}
+
+function getOrCreatePlayerId(): string {
+  let id = localStorage.getItem('zb_player_id')
+  if (!id) {
+    id = 'player_' + Math.random().toString(36).slice(2, 10)
+    localStorage.setItem('zb_player_id', id)
+  }
+  return id
+}
+
+function saveProgress(gameKey: string, score: number) {
+  let raw = localStorage.getItem('zb_progress')
+  const now = new Date().toISOString()
+  let store: ProgressStore
+  if (!raw) {
+    store = { totalScore: 0, games: {} }
+  } else {
+    try {
+      store = JSON.parse(raw) as ProgressStore
+    } catch {
+      store = { totalScore: 0, games: {} }
+    }
+  }
+  const prev = store.games[gameKey]
+  const best = Math.max(prev?.bestScore ?? 0, score)
+  const attempts = (prev?.attempts ?? 0) + 1
+  store.games[gameKey] = { bestScore: best, attempts, lastScore: score, lastPlayedAt: now }
+  store.totalScore = (store.totalScore ?? 0) + score
+  localStorage.setItem('zb_progress', JSON.stringify(store))
+}
+
 type PublicGameContent = {
   key: string
   title: string
@@ -28,12 +64,13 @@ export default function GamePlayPage() {
 
   useEffect(() => {
     if (!key) return
+    const gameKey: string = key as string
     let alive = true
     async function load() {
       setError(null)
       setLoading(true)
       try {
-        const res = await fetch(`http://localhost:4000/api/games/${encodeURIComponent(key)}`)
+        const res = await fetch(`http://localhost:4000/api/games/${encodeURIComponent(gameKey)}`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to load game')
         if (alive) setGame(data.game as PublicGameContent)
@@ -56,17 +93,20 @@ export default function GamePlayPage() {
 
   async function submit() {
     if (!key || !game) return
+    const gameKey: string = key as string
     setSubmitting(true)
     setScore(null)
     try {
-      const res = await fetch(`http://localhost:4000/api/games/${encodeURIComponent(key)}/submit`, {
+      const res = await fetch(`http://localhost:4000/api/games/${encodeURIComponent(gameKey)}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, userId: getOrCreatePlayerId() }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Submission failed')
-      setScore(data.score as number)
+      const s = data.score as number
+      setScore(s)
+      saveProgress(gameKey, s)
     } catch (e: any) {
       setError(e?.message || 'Submission failed')
     } finally {
@@ -89,7 +129,7 @@ export default function GamePlayPage() {
           <h1 className="text-white text-3xl font-bold">{game.title}</h1>
           <p className="text-gray-300 mt-1">{game.description}</p>
         </div>
-        <Link to="/games" className="text-primary hover:underline text-sm">Back to Games</Link>
+        <Link to="/games" className="text-emerald-300 hover:underline text-sm">Back to Games</Link>
       </div>
 
       <div className="mt-8 space-y-6">
@@ -101,7 +141,7 @@ export default function GamePlayPage() {
             </div>
             <div className="mt-4 grid gap-2">
               {q.options.map((opt, idx) => (
-                <label key={idx} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 cursor-pointer hover:border-primary/40">
+                <label key={idx} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 cursor-pointer hover:border-emerald-400/40">
                   <input
                     type="radio"
                     name={q.id}
@@ -122,12 +162,12 @@ export default function GamePlayPage() {
         <button
           onClick={submit}
           disabled={submitting || !allAnswered}
-          className="flex h-12 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-primary px-6 text-base font-bold leading-normal text-background-dark transition-colors hover:bg-opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex h-12 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-emerald-400 px-6 text-base font-bold leading-normal text-gray-900 transition-colors hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {submitting ? 'Submitting…' : 'Submit Answers'}
         </button>
         {score !== null && (
-          <span className="text-gray-200">Your score: <span className="text-primary font-semibold">{score}</span></span>
+          <span className="text-gray-200">Your score: <span className="text-emerald-300 font-semibold">{score}</span></span>
         )}
       </div>
     </div>

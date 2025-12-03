@@ -28,6 +28,9 @@ function App() {
               <Link className="text-gray-300 text-sm font-medium leading-normal transition-colors hover:text-emerald-300" to="/games">
                 Games
               </Link>
+              <Link className="text-gray-300 text-sm font-medium leading-normal transition-colors hover:text-emerald-300" to="/progress">
+                My Progress
+              </Link>
               <a className="text-gray-300 text-sm font-medium leading-normal transition-colors hover:text-emerald-300" href="#">
                 Leaderboard
               </a>

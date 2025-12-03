@@ -6,6 +6,7 @@ import App from './App.tsx'
 import GamesPage from './pages/Games.tsx'
 import GamePlayPage from './pages/GamePlay.tsx'
 import ScannerPage from './pages/Scanner.tsx'
+import ProgressPage from './pages/Progress.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
           <Route index element={<ScannerPage />} />
           <Route path="games" element={<GamesPage />} />
           <Route path="games/:key" element={<GamePlayPage />} />
+          <Route path="progress" element={<ProgressPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
