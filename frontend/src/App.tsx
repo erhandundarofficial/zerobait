@@ -6,11 +6,14 @@ function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const isHome = location.pathname === '/'
+  const isLogin = location.pathname === '/login'
+  const isSignup = location.pathname === '/signup'
+  const frameless = isHome || isLogin || isSignup
   return (
-    <div className={`font-display min-h-screen ${isHome ? '' : 'bg-gray-950 text-gray-100'}`}>
+    <div className={`font-display min-h-screen ${frameless ? '' : 'bg-gray-950 text-gray-100'}`}>
       <div className="relative flex min-h-screen w-full flex-col">
         {/* TopNavBar (persistent, hidden on Home) */}
-        {!isHome && (
+        {!frameless && (
           <header className="sticky top-0 z-10 flex h-16 w-full items-center justify-center border-b border-white/10 bg-gray-950/80 backdrop-blur-sm">
             <nav className="flex w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
               <div className="flex items-center gap-4 text-white">
@@ -74,7 +77,7 @@ function App() {
         )}
 
         {/* Routed Content */}
-        {isHome ? (
+        {frameless ? (
           <Outlet />
         ) : (
           <main className="flex w-full grow flex-col items-center px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
