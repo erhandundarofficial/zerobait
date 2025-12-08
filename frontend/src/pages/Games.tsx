@@ -119,6 +119,18 @@ export default function GamesPage() {
               <div className="rounded-xl border border-secondary/30 bg-white/5 p-4">
                 <h3 className="text-white text-lg font-bold mb-3 text-secondary text-glow-magenta">Browse Games</h3>
                 <nav className="flex flex-col gap-2">
+                  <Link
+                    to={`/games/password-puzzle`}
+                    className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 text-white/90 transition-all hover:bg-secondary/10 hover:border-secondary/40"
+                  >
+                    <span className="material-symbols-outlined text-secondary">password</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-white">Password Security Puzzle</p>
+                      <p className="text-xs text-white/70 line-clamp-1">Build a strong password and beat the crack-time target.</p>
+                    </div>
+                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">easy/med/hard</span>
+                    <span className="material-symbols-outlined text-white/60">chevron_right</span>
+                  </Link>
                   {games.map((g) => (
                     <Link
                       key={g.key}
