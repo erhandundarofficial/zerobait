@@ -24,7 +24,7 @@
     <div class="container">
       <div id="loading" class="card center" style="height: 140px; gap:10px">
         <div class="spinner"></div>
-        <div class="muted">Scanning…</div>
+        <div class="muted" id="loadingText">Scanning…</div>
       </div>
       <div id="content" class="card">
         <div class="row" style="justify-content:space-between;">
@@ -40,7 +40,7 @@
         <div class="row" style="margin-top:12px; justify-content:space-between">
           <button id="btn-scan" class="btn">Rescan</button>
           <button id="btn-report" class="btn" style="background: rgba(239,68,68,0.2);">Report</button>
-          <a class="btn" href="http://localhost:5173/" target="_blank">Open App</a>
+          <a class="btn" id="btn-open-app" href="http://localhost:5173/" target="_blank">Open App</a>
         </div>
       </div>
     </div>

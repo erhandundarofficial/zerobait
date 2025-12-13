@@ -6,6 +6,7 @@ export type AnalysisResult = {
   risk_score: number
   technical_details: Record<string, unknown>
   from_cache?: boolean
+  lang?: 'tr' | 'en'
 }
 
 function base64Url(input: string): string {
@@ -336,12 +337,14 @@ function enforceSummaryConsistency(summary: string, severity: 'low' | 'medium' |
   return s
 }
 
-async function callGemini(summaryInput: any, screenshotBase64?: string): Promise<string> {
+async function callGemini(summaryInput: any, screenshotBase64?: string, lang: 'tr' | 'en' = 'tr'): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return 'AI analysis unavailable (missing GEMINI_API_KEY).'
   const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest'
   const systemText =
-    "You are a cyber security expert explaining a website's safety to a non-technical friend. Analyze the provided technical JSON data and any screenshot. The JSON includes a severity_hint (low/medium/high) and optionally a risk_score_hint. Your wording MUST align with severity_hint and must not contradict it. Do NOT use markdown, headers, labels, bullet points, or structured prefixes. Do NOT start with 'Risk Level:', 'Why:', or 'Summary:'. Do NOT mention any numerical score. Start directly with the explanation. Keep it concise, direct, and human-readable (max 3 sentences)."
+    lang === 'tr'
+      ? "Bir siber güvenlik uzmanısın ve teknik olmayan bir arkadaşına bir sitenin güvenliğini açıklıyorsun. Verilen teknik JSON verisini ve varsa ekran görüntüsünü analiz et. JSON içinde severity_hint (low/medium/high) ve isteğe bağlı risk_score_hint bulunur. Yazdıkların mutlaka severity_hint ile uyumlu olmalı ve çelişmemelidir. Markdown, başlık, etiket, madde işareti veya yapısal önek KULLANMA. 'Risk Düzeyi:', 'Neden:' veya 'Özet:' ile başlama. Sayısal skor belirtme. Açıklamaya doğrudan başla. Kısa, net ve okunabilir yaz (en fazla 3 cümle). CEVABI TÜRKÇE YAZ."
+      : "You are a cyber security expert explaining a website's safety to a non-technical friend. Analyze the provided technical JSON data and any screenshot. The JSON includes a severity_hint (low/medium/high) and optionally a risk_score_hint. Your wording MUST align with severity_hint and must not contradict it. Do NOT use markdown, headers, labels, bullet points, or structured prefixes. Do NOT start with 'Risk Level:', 'Why:', or 'Summary:'. Do NOT mention any numerical score. Start directly with the explanation. Keep it concise, direct, and human-readable (max 3 sentences). Respond in English."
   const jsonText = JSON.stringify(summaryInput)
   const parts: any[] = [{ text: `Technical data:\n${jsonText}` }]
   if (screenshotBase64) {
@@ -386,7 +389,7 @@ async function callGemini(summaryInput: any, screenshotBase64?: string): Promise
   }
 }
 
-export async function analyzeUrlWithAI(u: string): Promise<AnalysisResult> {
+export async function analyzeUrlWithAI(u: string, lang: 'tr' | 'en' = 'tr'): Promise<AnalysisResult> {
   const normalized = normalizeUrl(u) || u
   const domain = getHostname(normalized)
 
@@ -401,9 +404,31 @@ export async function analyzeUrlWithAI(u: string): Promise<AnalysisResult> {
         const current: AnalysisResult = data as AnalysisResult
         const floor = riskFloorFromAi(current?.ai_summary || '')
         const sevCached = severityFromRisk(typeof current?.risk_score === 'number' ? current.risk_score : 0)
-        const adjustedSummary = enforceSummaryConsistency(current?.ai_summary || '', sevCached)
+        let adjustedSummary = enforceSummaryConsistency(current?.ai_summary || '', sevCached)
         let updated: AnalysisResult = current
         let needUpdate = false
+        // If cached language differs, regenerate summary in requested language using cached technical details
+        if ((current?.lang || 'tr') !== lang) {
+          try {
+            const regen = await callGemini(
+              {
+                url: normalized,
+                domain,
+                virusTotal: current?.technical_details?.virusTotal,
+                googleSafeBrowsing: current?.technical_details?.googleSafeBrowsing,
+                whois: current?.technical_details?.whois,
+                sslLabs: current?.technical_details?.sslLabs,
+                severity_hint: sevCached,
+                risk_score_hint: current?.risk_score,
+              },
+              undefined,
+              lang,
+            )
+            adjustedSummary = enforceSummaryConsistency(regen, sevCached)
+            updated = { ...updated, ai_summary: adjustedSummary, lang }
+            needUpdate = true
+          } catch {}
+        }
         if (adjustedSummary !== current?.ai_summary) {
           updated = { ...updated, ai_summary: adjustedSummary }
           needUpdate = true
@@ -472,6 +497,7 @@ export async function analyzeUrlWithAI(u: string): Promise<AnalysisResult> {
       risk_score_hint: risk,
     },
     screenshotBase64,
+    lang,
   )
   const aiSummary = enforceSummaryConsistency(aiSummaryRaw, severity)
 
@@ -486,6 +512,7 @@ export async function analyzeUrlWithAI(u: string): Promise<AnalysisResult> {
     ai_summary: finalSummary,
     risk_score: finalRisk,
     technical_details: technical,
+    lang,
   }
 
   // Save/refresh cache

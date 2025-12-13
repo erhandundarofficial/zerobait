@@ -50,7 +50,7 @@ async function scanUrl(url) {
   const res = await fetch(`${API_BASE}/ai/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: u }),
+    body: JSON.stringify({ url: u, lang: 'tr' }),
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || 'Scan failed')

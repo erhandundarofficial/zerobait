@@ -15,28 +15,31 @@ import { AuthProvider } from './auth/AuthProvider.tsx'
 import LoginPage from './pages/Login.tsx'
 import SignupPage from './pages/Signup.tsx'
 import HomePage from './pages/Home.tsx'
+import { LanguageProvider } from './i18n'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />}>
-            <Route index element={<HomePage />} />
-            <Route path="scanner" element={<ScannerPage />} />
-            <Route path="games" element={<GamesPage />} />
-            <Route path="games/essentials" element={<EssentialsPage />} />
-            <Route path="games/password-puzzle" element={<PasswordPuzzlePage />} />
-            <Route path="games/domain-detective" element={<DomainDetectivePage />} />
-            <Route path="games/spot-the-phish" element={<SpotThePhishPage />} />
-            <Route path="games/:key" element={<GamePlayPage />} />
-            <Route path="progress" element={<ProgressPage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="signup" element={<SignupPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<App />}>
+              <Route index element={<HomePage />} />
+              <Route path="scanner" element={<ScannerPage />} />
+              <Route path="games" element={<GamesPage />} />
+              <Route path="games/essentials" element={<EssentialsPage />} />
+              <Route path="games/password-puzzle" element={<PasswordPuzzlePage />} />
+              <Route path="games/domain-detective" element={<DomainDetectivePage />} />
+              <Route path="games/spot-the-phish" element={<SpotThePhishPage />} />
+              <Route path="games/:key" element={<GamePlayPage />} />
+              <Route path="progress" element={<ProgressPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="signup" element={<SignupPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
   </StrictMode>,
 )
 

@@ -1,9 +1,49 @@
 const API_BASE = 'http://localhost:4000/api'
 
+// Simple i18n for popup
+const dict = {
+  tr: {
+    scanning: 'Taranıyor…',
+    rescan: 'Yeniden Tara',
+    report: 'Bildir',
+    open_app: 'Uygulamayı Aç',
+    low: 'DÜŞÜK RİSK',
+    medium: 'ORTA RİSK',
+    high: 'YÜKSEK RİSK',
+    score: 'Risk Skoru',
+    url: 'URL',
+    report_failed: 'Bildirim başarısız',
+  },
+  en: {
+    scanning: 'Scanning…',
+    rescan: 'Rescan',
+    report: 'Report',
+    open_app: 'Open App',
+    low: 'LOW RISK',
+    medium: 'MODERATE RISK',
+    high: 'HIGH RISK',
+    score: 'Risk Score',
+    url: 'URL',
+    report_failed: 'Report failed',
+  },
+}
+
+let LANG = 'tr'
+try {
+  // Allow persisted choice if saved by the web app in localStorage-equivalent for extension
+  // or infer from browser
+  LANG = (localStorage.getItem('zb_lang') || '').toLowerCase() || (navigator.language || 'tr').toLowerCase().startsWith('tr') ? 'tr' : 'en'
+  if (LANG !== 'tr' && LANG !== 'en') LANG = 'tr'
+} catch {}
+
+function t(key) {
+  return (dict[LANG] && dict[LANG][key]) || (dict.en && dict.en[key]) || key
+}
+
 function verdictOf(score) {
-  if (score >= 70) return { label: 'HIGH RISK', color: '#ef4444' }
-  if (score >= 40) return { label: 'MODERATE RISK', color: '#f59e0b' }
-  return { label: 'LOW RISK', color: '#10b981' }
+  if (score >= 70) return { label: t('high'), color: '#ef4444' }
+  if (score >= 40) return { label: t('medium'), color: '#f59e0b' }
+  return { label: t('low'), color: '#10b981' }
 }
 
 function normalizeUrl(url) {
@@ -55,13 +95,21 @@ async function refresh() {
   const dot = document.getElementById('dot')
   const bar = document.getElementById('bar')
   const summary = document.getElementById('summary')
+  const loadingText = document.getElementById('loadingText')
+  const btnScan = document.getElementById('btn-scan')
+  const btnReport = document.getElementById('btn-report')
+  const btnOpenApp = document.getElementById('btn-open-app')
   // reset UI to loading
   if (loading) loading.classList.remove('hidden')
   if (content) content.classList.add('hidden')
+  if (loadingText) loadingText.textContent = t('scanning')
+  if (btnScan) btnScan.textContent = t('rescan')
+  if (btnReport) btnReport.textContent = t('report')
+  if (btnOpenApp) btnOpenApp.textContent = t('open_app')
   const active = await getActiveUrl()
   const u = normalizeUrl(active)
   if (!u) return
-  urlEl.textContent = `URL: ${u.toString()}`
+  urlEl.textContent = `${t('url')}: ${u.toString()}`
   hostEl.textContent = u.hostname
   try {
     const data = await scan(u)
@@ -106,7 +154,7 @@ async function bootstrap() {
       await report(u)
       alert('Thanks for your report!')
     } catch (e) {
-      alert('Report failed: ' + e.message)
+      alert(t('report_failed') + ': ' + e.message)
     }
   })
   await refresh()

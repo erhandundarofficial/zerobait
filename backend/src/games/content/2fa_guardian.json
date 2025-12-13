@@ -2,30 +2,46 @@
   "key": "2fa_guardian",
   "title": "2FA Guardian",
   "description": "Master two-factor authentication best practices.",
+  "title_tr": "2FA Koruyucusu",
+  "description_tr": "İki adımlı doğrulamanın en iyi uygulamalarına hâkim ol.",
   "type": "quiz",
   "difficulty": "hard",
   "questions": [
     {
       "id": "q1",
       "prompt": "Which 2FA method is generally strongest?",
+      "prompt_tr": "Genel olarak en güçlü 2FA yöntemi hangisidir?",
       "options": [
         "SMS codes",
         "Authenticator app or hardware key",
         "Email codes"
       ],
+      "options_tr": [
+        "SMS kodları",
+        "Doğrulayıcı uygulaması veya donanım anahtarı",
+        "E-posta kodları"
+      ],
       "correctIndex": 1,
-      "explanation": "SMS can be vulnerable to SIM swaps; hardware keys/app-based MFA are stronger."
+      "explanation": "SMS can be vulnerable to SIM swaps; hardware keys/app-based MFA are stronger.",
+      "explanation_tr": "SMS, SIM değişimi saldırılarına karşı zayıf olabilir; donanım anahtarları/uygulama tabanlı MFA daha güçlüdür."
     },
     {
       "id": "q2",
       "prompt": "A site asks you to enter a recovery code. What’s best practice?",
+      "prompt_tr": "Bir site senden kurtarma kodunu girmeni istiyor. En iyi uygulama nedir?",
       "options": [
         "Store in a password manager",
         "Email it to yourself",
         "Screenshot and save to photos"
       ],
+      "options_tr": [
+        "Bir şifre yöneticisinde saklamak",
+        "Kendine e-posta atmak",
+        "Ekran görüntüsü alıp fotoğraflara kaydetmek"
+      ],
       "correctIndex": 0,
-      "explanation": "Password managers securely store recovery codes alongside credentials."
+      "explanation": "Password managers securely store recovery codes alongside credentials.",
+      "explanation_tr": "Şifre yöneticileri kurtarma kodlarını kimlik bilgileriyle birlikte güvenle saklar."
     }
   ]
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 type GameListItem = {
   key: string
@@ -21,6 +23,7 @@ const GROUPED_KEYS = [
 export default function EssentialsPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { t, lang } = useI18n()
   const [games, setGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +34,7 @@ export default function EssentialsPage() {
       setError(null)
       setLoading(true)
       try {
-        const res = await fetch('http://localhost:4000/api/games')
+        const res = await fetch(`http://localhost:4000/api/games?lang=${encodeURIComponent(lang)}`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to load games')
         if (alive) setGames((data.games || []) as GameListItem[])
@@ -43,7 +46,7 @@ export default function EssentialsPage() {
     }
     load()
     return () => { alive = false }
-  }, [])
+  }, [lang])
 
   const essentials = games.filter(g => GROUPED_KEYS.includes(g.key as any))
 
@@ -62,39 +65,40 @@ export default function EssentialsPage() {
                 <div className="text-primary">
                   <span className="material-symbols-outlined !text-3xl text-glow-cyan">shield</span>
                 </div>
-                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Zerobait</h2>
+                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">{t('app.name')}</h2>
               </div>
               <div className="hidden md:flex flex-1 justify-end items-center gap-6">
                 <nav className="flex items-center gap-2">
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-primary/20" to="/">
                     <span className="material-symbols-outlined text-primary group-hover:text-glow-cyan transition-all duration-300">home</span>
-                    <span className="group-hover:text-glow-cyan transition-all duration-300">Dashboard</span>
+                    <span className="group-hover:text-glow-cyan transition-all duration-300">{t('nav.dashboard')}</span>
                   </Link>
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-secondary/20" to="/games">
                     <span className="material-symbols-outlined text-secondary group-hover:text-glow-magenta transition-all duration-300">gamepad</span>
-                    <span className="group-hover:text-glow-magenta transition-all duration-300">Games</span>
+                    <span className="group-hover:text-glow-magenta transition-all duration-300">{t('nav.games')}</span>
                   </Link>
                 </nav>
                 <div className="w-px h-6 bg-white/20"></div>
                 <div className="flex items-center gap-4 pl-6">
                   {!user ? (
                     <>
-                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">Log In</Link>
+                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">{t('nav.login')}</Link>
                       <Link className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-primary text-black hover:bg-primary/90 transition-all duration-300 text-sm font-bold leading-normal tracking-[0.015em]" to="/signup">
-                        <span className="truncate">Sign Up</span>
+                        <span className="truncate">{t('nav.signup')}</span>
                       </Link>
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-white/80">Hello, <span className="text-primary font-semibold">{user.username ?? 'user'}</span></span>
+                      <span className="text-sm text-white/80">{t('nav.hello_name', { name: user.username ?? 'user' })}</span>
                       <button
                         onClick={() => { logout(); navigate('/') }}
                         className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white/10 px-3 text-xs font-semibold leading-normal text-gray-200 transition-colors hover:bg-white/20"
                       >
-                        Log out
+                        {t('nav.logout')}
                       </button>
                     </div>
                   )}
+                  <div className="ml-2"><LanguageSwitcher /></div>
                 </div>
               </div>
             </header>
@@ -102,14 +106,14 @@ export default function EssentialsPage() {
             <div className="space-y-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">Phishing Essentials</p>
-                  <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">Choose a core skill</h1>
-                  <p className="text-white/70 mt-2 max-w-2xl">Five foundational challenges to sharpen your instincts: URLs, social tricks, passwords, email clues, and 2FA safety.</p>
+                  <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">{t('games.essentials.label')}</p>
+                  <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">{t('games.essentials.choose_title')}</h1>
+                  <p className="text-white/70 mt-2 max-w-2xl">{t('games.essentials.choose_desc')}</p>
                 </div>
-                <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">Back</Link>
+                <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">{t('common.back')}</Link>
               </div>
 
-              {loading && <p className="mt-4 text-white/80">Loading…</p>}
+              {loading && <p className="mt-4 text-white/80">{t('games.loading')}</p>}
               {error && <p className="mt-4 text-red-400">{error}</p>}
 
               {!loading && !error && (
@@ -137,11 +141,11 @@ export default function EssentialsPage() {
 
             <footer className="mt-auto w-full border-t border-white/10 bg-background-dark/50 py-8 backdrop-blur-sm">
               <div className="mx-auto flex max-w-[960px] flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-10">
-                <p className="text-sm text-white/60">© 2024 Zerobait. All rights reserved.</p>
+                <p className="text-sm text-white/60">{t('footer.copyright')}</p>
                 <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">Privacy Policy</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">About</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">Contact</a>
+                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">{t('common.privacy')}</a>
+                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">{t('common.about')}</a>
+                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">{t('common.contact')}</a>
                 </nav>
               </div>
             </footer>

@@ -2,30 +2,46 @@
   "key": "social_sleuth",
   "title": "Social Sleuth",
   "description": "Recognize social engineering tricks.",
+  "title_tr": "Sosyal Dedektif",
+  "description_tr": "Sosyal mühendislik taktiklerini tanı.",
   "type": "quiz",
   "difficulty": "medium",
   "questions": [
     {
       "id": "q1",
       "prompt": "If someone urges immediate action to avoid account closure, this is likely…",
+      "prompt_tr": "Biri hesabın kapanmasını önlemek için hemen harekete geçmeni istiyorsa bu muhtemelen…",
       "options": [
         "Routine maintenance",
         "A sense-of-urgency tactic",
         "A secure 2FA prompt"
       ],
+      "options_tr": [
+        "Rutin bakım",
+        "Acil durum hissi yaratma taktiği",
+        "Güvenli 2FA isteği"
+      ],
       "correctIndex": 1,
-      "explanation": "Creating urgency is a common manipulation technique."
+      "explanation": "Creating urgency is a common manipulation technique.",
+      "explanation_tr": "Acil durum hissi yaratmak yaygın bir manipülasyon tekniğidir."
     },
     {
       "id": "q2",
       "prompt": "They ask for your one-time code to 'verify identity'. You should…",
+      "prompt_tr": "'Kimliği doğrulamak' için tek kullanımlık kodunu istiyorlar. Ne yapmalısın…",
       "options": [
         "Share it quickly",
         "Ask for a callback",
         "Never share OTP codes"
       ],
+      "options_tr": [
+        "Hemen paylaş",
+        "Geri arama iste",
+        "OTP kodlarını asla paylaşma"
+      ],
       "correctIndex": 2,
-      "explanation": "OTP codes are secret and should never be shared."
+      "explanation": "OTP codes are secret and should never be shared.",
+      "explanation_tr": "OTP kodları gizlidir ve asla paylaşılmamalıdır."
     }
   ]
 }

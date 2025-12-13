@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { flags } from '../config/featureFlags'
+import { useI18n } from '../i18n'
 
 type AiScanResponse = {
   ai_summary: string
@@ -8,6 +9,7 @@ type AiScanResponse = {
 }
 
 export default function ScannerPage() {
+  const { t, lang } = useI18n()
   const [url, setUrl] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
@@ -38,7 +40,7 @@ export default function ScannerPage() {
 
     const trimmed = url.trim()
     if (!trimmed) {
-      setScanError('Please enter a URL to scan.')
+      setScanError(t('scanner.error_empty'))
       return
     }
 
@@ -47,12 +49,12 @@ export default function ScannerPage() {
       const response = await fetch('http://localhost:4000/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: trimmed }),
+        body: JSON.stringify({ url: trimmed, lang }),
       })
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
-        setScanError((data as any).error || 'Failed to analyze URL.')
+        setScanError((data as any).error || t('scanner.error_analyze'))
         setAiResult(null)
         return
       }
@@ -60,7 +62,7 @@ export default function ScannerPage() {
       const data = (await response.json()) as AiScanResponse
       setAiResult(data)
     } catch (error) {
-      setScanError('Network error while analyzing URL.')
+      setScanError(t('scanner.error_network'))
       setAiResult(null)
     } finally {
       setIsScanning(false)
@@ -81,13 +83,13 @@ export default function ScannerPage() {
 
       const data = await response.json().catch(() => ({}))
       if (!response.ok || !data.success) {
-        setReportMessage(data.error || 'Failed to report URL.')
+        setReportMessage(data.error || t('scanner.report_failed'))
         return
       }
 
-      setReportMessage('Thanks for your report!')
+      setReportMessage(t('scanner.report_thanks'))
     } catch (error) {
-      setReportMessage('Network error while reporting URL.')
+      setReportMessage(t('scanner.report_network'))
     } finally {
       setIsReporting(false)
     }
@@ -130,10 +132,10 @@ export default function ScannerPage() {
     <div className="w-full max-w-3xl">
       <div className="text-center">
         <h1 className="text-white text-4xl font-bold leading-tight tracking-tighter sm:text-5xl lg:text-6xl">
-          Scan URL for Phishing Threats
+          {t('scanner.hero_title')}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base font-normal leading-normal text-gray-300 sm:text-lg">
-          Enter a URL below to check for potential phishing threats in real-time.
+          {t('scanner.hero_subtitle')}
         </p>
       </div>
 
@@ -145,7 +147,7 @@ export default function ScannerPage() {
             </div>
             <input
               className="h-14 w-full min-w-0 flex-1 rounded-xl border border-white/10 bg-gray-900 p-4 pl-12 text-base font-normal leading-normal text-gray-100 placeholder:text-gray-500 focus:border-emerald-400 focus:outline-0 focus:ring-2 focus:ring-emerald-400/50"
-              placeholder="Enter URL to scan (e.g., https://example.com)"
+              placeholder={t('scanner.input_placeholder')}
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -156,7 +158,7 @@ export default function ScannerPage() {
             type="submit"
             disabled={isScanning}
           >
-            <span className="truncate">{isScanning ? 'Scanning…' : 'Scan Now'}</span>
+            <span className="truncate">{isScanning ? t('scanner.scanning') : t('scanner.scan')}</span>
           </button>
         </form>
         {scanError && <p className="mt-3 text-sm text-red-400 text-center">{scanError}</p>}
@@ -173,7 +175,7 @@ export default function ScannerPage() {
           </div>
           <div className="space-y-2">
             <h3 className="text-2xl font-bold">
-              {isIdle ? 'READY TO SCAN' : riskLevel === 'HIGH' ? 'HIGH RISK' : riskLevel === 'MEDIUM' ? 'MODERATE RISK' : 'LOW RISK'}
+              {isIdle ? t('risk.ready') : riskLevel === 'HIGH' ? t('risk.high') : riskLevel === 'MEDIUM' ? t('risk.medium') : t('risk.low')}
             </h3>
             <p className="text-gray-200">
               {aiResult ? `URL: ${url.trim()}` : 'Scan a URL to see results from the Zerobait engine.'}
@@ -184,7 +186,7 @@ export default function ScannerPage() {
             {aiResult && (
               <div className="mt-4 w-full max-w-[560px] mx-auto text-left">
                 <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-semibold">Risk Score</span>
+                  <span className="font-semibold">{t('risk.score_label')}</span>
                   <span>{risk}/100</span>
                 </div>
                 <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden">
@@ -204,7 +206,7 @@ export default function ScannerPage() {
                 onClick={handleReport}
                 disabled={isReporting}
               >
-                {isReporting ? 'Reporting…' : 'Report this URL'}
+                {isReporting ? t('scanner.reporting') : t('scanner.report')}
               </button>
               {reportMessage && <p className="text-xs text-gray-300">{reportMessage}</p>}
             </div>
@@ -218,10 +220,10 @@ export default function ScannerPage() {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-bold text-white/90 flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary">security</span>
-                    VirusTotal
+                    {t('scanner.vt_title')}
                   </h4>
                   <span className="text-xs text-white/70">
-                    {vtTotal > 0 ? `${vtMal + vtSusp} flagged / ${vtTotal} vendors` : 'No vendor data'}
+                    {vtTotal > 0 ? t('scanner.vt_flagged_vendors', { count: vtMal + vtSusp, total: vtTotal }) : t('scanner.vt_no_vendor')}
                   </span>
                 </div>
                 {vtTotal > 0 ? (
@@ -240,7 +242,7 @@ export default function ScannerPage() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm text-white/70">Waiting for vendor analysis…</p>
+                  <p className="text-sm text-white/70">{t('scanner.waiting_vendor')}</p>
                 )}
               </div>
 
@@ -248,9 +250,9 @@ export default function ScannerPage() {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-bold text-white/90 flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary">https</span>
-                    SSL Labs
+                    {t('scanner.ssl_title')}
                   </h4>
-                  <span className="text-xs text-white/70">{sslStatus ? String(sslStatus) : 'No status'}{sslEndpoints.length ? ` • ${sslUpCount}/${sslEndpoints.length} ready` : ''}</span>
+                  <span className="text-xs text-white/70">{sslStatus ? String(sslStatus) : t('scanner.whois_unknown')}{sslEndpoints.length ? ` • ${sslUpCount}/${sslEndpoints.length} ready` : ''}</span>
                 </div>
                 {sslEndpoints.length ? (
                   <div className="flex flex-wrap gap-2">
@@ -261,7 +263,7 @@ export default function ScannerPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-white/70">No endpoints yet.</p>
+                  <p className="text-sm text-white/70">{t('scanner.ssl_no_endpoints')}</p>
                 )}
               </div>
 
@@ -269,9 +271,9 @@ export default function ScannerPage() {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-bold text-white/90 flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary">schedule</span>
-                    WHOIS (Domain Age)
+                    {t('scanner.whois_title')}
                   </h4>
-                  <span className="text-xs text-white/70">{domainAgeDays !== null ? `${domainAgeDays} days` : 'unknown'}</span>
+                  <span className="text-xs text-white/70">{domainAgeDays !== null ? `${domainAgeDays} days` : t('scanner.whois_unknown')}</span>
                 </div>
                 <div className="space-y-2">
                   <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden">
@@ -287,7 +289,7 @@ export default function ScannerPage() {
 
             {aiResult.technical_details?.screenshot?.base64 && (
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col items-center">
-                <h4 className="mb-2 text-sm font-bold text-white/90">Screenshot</h4>
+                <h4 className="mb-2 text-sm font-bold text-white/90">{t('scanner.screenshot')}</h4>
                 <img
                   src={`data:image/png;base64,${aiResult.technical_details.screenshot.base64}`}
                   alt="Website screenshot"
@@ -298,13 +300,13 @@ export default function ScannerPage() {
 
             <div className="rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-white/90">Raw technical details</h4>
+                <h4 className="text-sm font-bold text-white/90">{t('scanner.raw_title')}</h4>
                 <button
                   type="button"
                   onClick={() => setShowRaw((v) => !v)}
                   className="text-xs font-semibold text-secondary hover:text-white"
                 >
-                  {showRaw ? 'Hide' : 'Show'}
+                  {showRaw ? t('common.hide') : t('common.show')}
                 </button>
               </div>
               {showRaw && (

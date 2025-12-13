@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 type GameListItem = {
   key: string
@@ -28,6 +30,7 @@ const GROUPED_KEYS = [
 export default function GamesPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { t, lang } = useI18n()
   const [games, setGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +51,7 @@ export default function GamesPage() {
       setError(null)
       setLoading(true)
       try {
-        const res = await fetch('http://localhost:4000/api/games')
+        const res = await fetch(`http://localhost:4000/api/games?lang=${encodeURIComponent(lang)}`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to load games')
         if (alive) setGames(data.games || [])
@@ -62,7 +65,7 @@ export default function GamesPage() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [lang])
 
   useEffect(() => {
     let active = true
@@ -133,49 +136,50 @@ export default function GamesPage() {
                 <div className="text-primary">
                   <span className="material-symbols-outlined !text-3xl text-glow-cyan">shield</span>
                 </div>
-                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Zerobait</h2>
+                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">{t('app.name')}</h2>
               </div>
               <div className="hidden md:flex flex-1 justify-end items-center gap-6">
                 <nav className="flex items-center gap-2">
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-primary/20" to="/">
                     <span className="material-symbols-outlined text-primary group-hover:text-glow-cyan transition-all duration-300">home</span>
-                    <span className="group-hover:text-glow-cyan transition-all duration-300">Dashboard</span>
+                    <span className="group-hover:text-glow-cyan transition-all duration-300">{t('nav.dashboard')}</span>
                   </Link>
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-secondary/20" to="/games">
                     <span className="material-symbols-outlined text-secondary group-hover:text-glow-magenta transition-all duration-300">gamepad</span>
-                    <span className="group-hover:text-glow-magenta transition-all duration-300">Games</span>
+                    <span className="group-hover:text-glow-magenta transition-all duration-300">{t('nav.games')}</span>
                   </Link>
                 </nav>
                 <div className="w-px h-6 bg-white/20"></div>
                 <div className="flex items-center gap-4 pl-6">
                   {!user ? (
                     <>
-                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">Log In</Link>
+                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">{t('nav.login')}</Link>
                       <Link className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-primary text-black hover:bg-primary/90 transition-all duration-300 text-sm font-bold leading-normal tracking-[0.015em]" to="/signup">
-                        <span className="truncate">Sign Up</span>
+                        <span className="truncate">{t('nav.signup')}</span>
                       </Link>
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-white/80">Hello, <span className="text-primary font-semibold">{user.username ?? 'user'}</span></span>
+                      <span className="text-sm text-white/80">{t('nav.hello_name', { name: user.username ?? 'user' })}</span>
                       <button
                         onClick={() => { logout(); navigate('/'); }}
                         className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white/10 px-3 text-xs font-semibold leading-normal text-gray-200 transition-colors hover:bg-white/20"
                       >
-                        Log out
+                        {t('nav.logout')}
                       </button>
                     </div>
                   )}
+                  <div className="ml-2"><LanguageSwitcher /></div>
                 </div>
               </div>
             </header>
             <div className="mb-8">
-          <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">Game Modes</p>
-          <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em]">Choose your challenge</h1>
-          <p className="text-white/70 text-base max-w-3xl mt-2">Practice your phishing awareness with short, focused scenarios. Earn points and level up your skills.</p>
+          <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">{t('games.modes_label')}</p>
+          <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em]">{t('games.choose_title')}</h1>
+          <p className="text-white/70 text-base max-w-3xl mt-2">{t('games.choose_desc')}</p>
         </div>
 
-            {loading && <p className="mt-8 text-center text-white/80">Loading…</p>}
+            {loading && <p className="mt-8 text-center text-white/80">{t('games.loading')}</p>}
             {error && <p className="mt-8 text-center text-red-400">{error}</p>}
 
             {!loading && !error && (
@@ -183,7 +187,7 @@ export default function GamesPage() {
             {/* Sidebar game modes */}
             <aside className="flex flex-col gap-4">
               <div className="rounded-xl border border-secondary/30 bg-white/5 p-4">
-                <h3 className="text-white text-lg font-bold mb-3 text-secondary text-glow-magenta">Browse Games</h3>
+                <h3 className="text-white text-lg font-bold mb-3 text-secondary text-glow-magenta">{t('games.browse')}</h3>
                 <nav className="flex flex-col gap-2">
                   <Link
                     to={`/games/essentials`}
@@ -191,8 +195,8 @@ export default function GamesPage() {
                   >
                     <span className="material-symbols-outlined text-secondary">verified</span>
                     <div className="flex-1">
-                      <p className="font-semibold text-white">Phishing Essentials</p>
-                      <p className="text-xs text-white/70 line-clamp-1">URLs, social tricks, passwords, emails, and 2FA basics.</p>
+                      <p className="font-semibold text-white">{t('games.essentials_title')}</p>
+                      <p className="text-xs text-white/70 line-clamp-1">{t('games.essentials_desc')}</p>
                     </div>
                     <span className="material-symbols-outlined text-white/60">chevron_right</span>
                   </Link>
@@ -202,10 +206,10 @@ export default function GamesPage() {
                   >
                     <span className="material-symbols-outlined text-secondary">password</span>
                     <div className="flex-1">
-                      <p className="font-semibold text-white">Password Security Puzzle</p>
-                      <p className="text-xs text-white/70 line-clamp-1">Build a strong password and beat the crack-time target.</p>
+                      <p className="font-semibold text-white">{t('games.password_title')}</p>
+                      <p className="text-xs text-white/70 line-clamp-1">{t('games.password_desc')}</p>
                     </div>
-                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">easy/med/hard</span>
+                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">{t('games.difficulty_all')}</span>
                     <span className="material-symbols-outlined text-white/60">chevron_right</span>
                   </Link>
                   <Link
@@ -214,10 +218,10 @@ export default function GamesPage() {
                   >
                     <span className="material-symbols-outlined text-secondary">public</span>
                     <div className="flex-1">
-                      <p className="font-semibold text-white">Domain Detective</p>
-                      <p className="text-xs text-white/70 line-clamp-1">Spot the real domains among phishing look-alikes.</p>
+                      <p className="font-semibold text-white">{t('games.domain_title')}</p>
+                      <p className="text-xs text-white/70 line-clamp-1">{t('games.domain_desc')}</p>
                     </div>
-                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">easy/med/hard</span>
+                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">{t('games.difficulty_all')}</span>
                     <span className="material-symbols-outlined text-white/60">chevron_right</span>
                   </Link>
                   <Link
@@ -226,10 +230,10 @@ export default function GamesPage() {
                   >
                     <span className="material-symbols-outlined text-secondary">mail</span>
                     <div className="flex-1">
-                      <p className="font-semibold text-white">Spot the Phish!</p>
-                      <p className="text-xs text-white/70 line-clamp-1">Read emails and decide: Safe or Phishing.</p>
+                      <p className="font-semibold text-white">{t('games.spot_title')}</p>
+                      <p className="text-xs text-white/70 line-clamp-1">{t('games.spot_desc')}</p>
                     </div>
-                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">easy/med/hard</span>
+                    <span className="text-[10px] uppercase rounded-md bg-white/10 px-2 py-1 text-white/70">{t('games.difficulty_all')}</span>
                     <span className="material-symbols-outlined text-white/60">chevron_right</span>
                   </Link>
                   {filteredGames.map((g) => (
@@ -256,26 +260,26 @@ export default function GamesPage() {
               {/* Stats */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="rounded-xl border border-secondary/30 bg-white/5 p-6 text-center">
-                  <p className="text-white/70 text-sm">Total Score</p>
+                  <p className="text-white/70 text-sm">{t('games.total_score')}</p>
                   <p className="text-secondary text-6xl font-black my-1 text-glow-magenta">{user?.score ?? 0}</p>
                   <div className="flex items-center justify-center gap-2 text-ok">
                     <span className="material-symbols-outlined text-lg">trending_up</span>
-                    <span className="text-sm font-bold">Keep it up!</span>
+                    <span className="text-sm font-bold">{t('games.keep_it_up')}</span>
                   </div>
                 </div>
                 <div className="rounded-xl border border-secondary/30 bg-white/5 p-6 text-center">
-                  <p className="text-white/70 text-sm">Your Rank ({lbWindow === 'all' ? 'All-time' : lbWindow})</p>
+                  <p className="text-white/70 text-sm">{t('games.your_rank', { window: lbWindow === 'all' ? t('games.all_time') : lbWindow })}</p>
                   {lbLoading ? (
-                    <p className="text-white/80">Loading…</p>
+                    <p className="text-white/80">{t('games.loading')}</p>
                   ) : me ? (
                     <>
                       <p className="text-secondary text-6xl font-black my-1 text-glow-magenta">#{me.rank}</p>
-                      <p className="text-white/60 text-sm">Your {lbWindow === 'all' ? 'total' : 'recent'} score: {me.score}</p>
+                      <p className="text-white/60 text-sm">{t('games.your_score_line', { period: lbWindow === 'all' ? t('games.period_total') : t('games.period_recent'), score: me.score })}</p>
                     </>
                   ) : (
                     <>
                       <p className="text-secondary text-4xl font-black my-1 text-glow-magenta">—</p>
-                      <p className="text-white/60 text-sm">Not ranked yet</p>
+                      <p className="text-white/60 text-sm">{t('games.not_ranked')}</p>
                     </>
                   )}
                 </div>
@@ -294,36 +298,36 @@ export default function GamesPage() {
                         onClick={() => { setLbWindow(w); setPage(0) }}
                         className={`px-3 py-1 rounded-md text-sm font-semibold transition-colors ${lbWindow===w ? 'bg-secondary/30 text-white border border-secondary/60' : 'bg-white/10 text-white/80 hover:bg-white/20'}`}
                       >
-                        {w === 'all' ? 'All-time' : w.toUpperCase()}
+                        {w === 'all' ? t('games.all_time') : w.toUpperCase()}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div className="overflow-x-auto">
                   {lbLoading ? (
-                    <p className="text-center text-white/80">Loading…</p>
+                    <p className="text-center text-white/80">{t('games.loading')}</p>
                   ) : lbError ? (
                     <p className="text-center text-red-400">{lbError}</p>
                   ) : (
                     <table className="w-full text-left">
                       <thead>
                         <tr className="border-b border-secondary/30 text-secondary">
-                          <th className="p-3 font-semibold tracking-wider text-sm">Rank</th>
-                          <th className="p-3 font-semibold tracking-wider text-sm">Player</th>
-                          <th className="p-3 font-semibold tracking-wider text-sm text-right">Score</th>
+                          <th className="p-3 font-semibold tracking-wider text-sm">{t('games.table_rank')}</th>
+                          <th className="p-3 font-semibold tracking-wider text-sm">{t('games.table_player')}</th>
+                          <th className="p-3 font-semibold tracking-wider text-sm text-right">{t('games.table_score')}</th>
                         </tr>
                       </thead>
                       <tbody className="text-white/90">
                         {leaders.map((row) => (
                           <tr key={row.userId} className={`border-b border-white/10 hover:bg-white/5 ${row.userId === user?.id ? 'bg-secondary/10 border-y border-secondary/40' : ''}`}>
                             <td className="p-4 font-medium">{row.rank}</td>
-                            <td className="p-4 font-medium">{row.username ?? 'Anonymous'}</td>
+                            <td className="p-4 font-medium">{row.username ?? t('games.anonymous')}</td>
                             <td className="p-4 font-bold text-secondary text-right text-glow-magenta">{row.score}</td>
                           </tr>
                         ))}
                         {!leaders.length && (
                           <tr>
-                            <td className="p-4 text-center text-white/60" colSpan={3}>No entries yet</td>
+                            <td className="p-4 text-center text-white/60" colSpan={3}>{t('games.no_entries')}</td>
                           </tr>
                         )}
                       </tbody>
@@ -336,17 +340,17 @@ export default function GamesPage() {
                     disabled={!hasPrev || lbLoading}
                     className={`px-3 py-1 rounded-md text-sm font-semibold transition-colors ${(!hasPrev || lbLoading) ? 'bg-white/5 text-white/40 cursor-not-allowed' : 'bg-white/10 text-white/80 hover:bg-white/20'}`}
                   >
-                    Prev
+                    {t('games.prev')}
                   </button>
                   <div className="text-white/70 text-sm">
-                    Page {page + 1} of {Math.max(1, Math.ceil(total / LIMIT))}
+                    {t('games.page_of', { page: page + 1, pages: Math.max(1, Math.ceil(total / LIMIT)) })}
                   </div>
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={!hasNext || lbLoading}
                     className={`px-3 py-1 rounded-md text-sm font-semibold transition-colors ${(!hasNext || lbLoading) ? 'bg-white/5 text-white/40 cursor-not-allowed' : 'bg-white/10 text-white/80 hover:bg-white/20'}`}
                   >
-                    Next
+                    {t('games.next')}
                   </button>
                 </div>
               </div>
@@ -357,11 +361,11 @@ export default function GamesPage() {
             {/* Footer (exact spacing like dashboard/home) */}
             <footer className="mt-auto w-full border-t border-white/10 bg-background-dark/50 py-8 backdrop-blur-sm">
               <div className="mx-auto flex max-w-[960px] flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-10">
-                <p className="text-sm text-white/60">© 2024 Zerobait. All rights reserved.</p>
+                <p className="text-sm text-white/60">{t('footer.copyright')}</p>
                 <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">Privacy Policy</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">About</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">Contact</a>
+                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">{t('common.privacy')}</a>
+                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">{t('common.about')}</a>
+                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">{t('common.contact')}</a>
                 </nav>
               </div>
             </footer>

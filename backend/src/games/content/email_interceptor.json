@@ -2,30 +2,46 @@
   "key": "email_interceptor",
   "title": "Email Interceptor",
   "description": "Identify phishing red flags in emails.",
+  "title_tr": "E-posta Engelleyici",
+  "description_tr": "E-postalardaki oltalama işaretlerini tanı.",
   "type": "quiz",
   "difficulty": "medium",
   "questions": [
     {
       "id": "q1",
       "prompt": "Which is a common phishing red flag?",
+      "prompt_tr": "Yaygın bir oltalama uyarısı hangisidir?",
       "options": [
         "Generic greeting like 'Dear user'",
         "Perfect grammar and spelling",
         "Email from your own domain"
       ],
+      "options_tr": [
+        "'Sayın kullanıcı' gibi genel hitap",
+        "Mükemmel dilbilgisi ve yazım",
+        "Kendi alan adından gelen e-posta"
+      ],
       "correctIndex": 0,
-      "explanation": "Phishing emails often use generic greetings to target many recipients."
+      "explanation": "Phishing emails often use generic greetings to target many recipients.",
+      "explanation_tr": "Oltalama e-postaları çoğu zaman çok kişiyi hedeflemek için genel hitaplar kullanır."
     },
     {
       "id": "q2",
       "prompt": "What should you check before clicking a link in an email?",
+      "prompt_tr": "E-postadaki bir bağlantıya tıklamadan önce neyi kontrol etmelisiniz?",
       "options": [
         "The sender’s profile picture",
         "The preview text length",
         "The actual URL behind the link"
       ],
+      "options_tr": [
+        "Gönderenin profil resmi",
+        "Önizleme metni uzunluğu",
+        "Bağlantının arkasındaki gerçek URL"
+      ],
       "correctIndex": 2,
-      "explanation": "Hover the link to inspect the real destination URL."
+      "explanation": "Hover the link to inspect the real destination URL.",
+      "explanation_tr": "Gerçek hedef URL’yi görmek için bağlantının üzerine gelin."
     }
   ]
 }
