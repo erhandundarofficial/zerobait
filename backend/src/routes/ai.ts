@@ -36,12 +36,13 @@ function normalizeForAI(input: string): string | null {
 }
 
 router.post('/ai/analyze', async (req: Request, res: Response) => {
-  const { url } = req.body as { url?: string }
+  const { url, lang } = req.body as { url?: string; lang?: 'tr' | 'en' }
   if (!url || typeof url !== 'string') return res.status(400).json({ error: 'Missing or invalid "url" in request body' })
   const normalized = normalizeForAI(url)
   if (!normalized) return res.status(400).json({ error: 'Invalid URL format. Expected like https://www.example.com/' })
   try {
-    const result = await analyzeUrlWithAI(normalized)
+    const chosen: 'tr' | 'en' = lang === 'en' ? 'en' : 'tr'
+    const result = await analyzeUrlWithAI(normalized, chosen)
     return res.json(result)
   } catch {
     return res.status(500).json({ error: 'Failed to analyze URL' })

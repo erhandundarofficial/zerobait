@@ -1,10 +1,13 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from './auth/AuthProvider'
+import { useI18n } from './i18n'
+import LanguageSwitcher from './components/LanguageSwitcher'
 
 function App() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useI18n()
   const path = location.pathname
   const isHome = path === '/'
   const isLogin = path === '/login'
@@ -29,21 +32,21 @@ function App() {
                   </svg>
                 </div>
                 <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">
-                  Zerobait
+                  {t('app.name')}
                 </h2>
               </div>
               <div className="hidden items-center gap-8 md:flex">
                 <Link className="text-white text-sm font-medium leading-normal transition-colors hover:text-emerald-300" to="/">
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Link>
                 <Link className="text-gray-300 text-sm font-medium leading-normal transition-colors hover:text-emerald-300" to="/games">
-                  Games
+                  {t('nav.games')}
                 </Link>
                 <Link className="text-gray-300 text-sm font-medium leading-normal transition-colors hover:text-emerald-300" to="/progress">
-                  My Progress
+                  {t('nav.progress')}
                 </Link>
                 <a className="text-gray-300 text-sm font-medium leading-normal transition-colors hover:text-emerald-300" href="#">
-                  Leaderboard
+                  {t('nav.leaderboard')}
                 </a>
               </div>
               <div className="flex items-center gap-2">
@@ -53,26 +56,27 @@ function App() {
                       onClick={() => navigate('/login')}
                       className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-emerald-400/15 px-4 text-sm font-bold leading-normal text-emerald-300 transition-colors hover:bg-emerald-400/25"
                     >
-                      <span className="truncate">Log In</span>
+                      <span className="truncate">{t('nav.login')}</span>
                     </button>
                     <button
                       onClick={() => navigate('/signup')}
                       className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-emerald-400 px-4 text-sm font-bold leading-normal text-gray-900 transition-colors hover:bg-emerald-300"
                     >
-                      <span className="truncate">Sign Up</span>
+                      <span className="truncate">{t('nav.signup')}</span>
                     </button>
                   </>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-300">Hello, <span className="text-emerald-300 font-semibold">{user.username ?? 'user'}</span></span>
+                    <span className="text-sm text-gray-300">{t('nav.hello_name', { name: user.username ?? 'user' })}</span>
                     <button
                       onClick={() => { logout(); navigate('/'); }}
                       className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white/10 px-3 text-xs font-semibold leading-normal text-gray-200 transition-colors hover:bg-white/20"
                     >
-                      Log out
+                      {t('nav.logout')}
                     </button>
                   </div>
                 )}
+                <div className="ml-2"><LanguageSwitcher /></div>
               </div>
             </nav>
           </header>

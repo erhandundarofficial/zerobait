@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import type React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 // Types
 type Difficulty = 'easy' | 'medium' | 'hard'
@@ -140,6 +142,7 @@ const LEVEL_REQUIREMENTS: Record<Difficulty, string[]> = {
 export default function PasswordPuzzlePage() {
   const { user, logout, addScore } = useAuth()
   const navigate = useNavigate()
+  const { t } = useI18n()
 
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null)
   const [selectedPieces, setSelectedPieces] = useState<string[]>([])
@@ -239,39 +242,40 @@ export default function PasswordPuzzlePage() {
                 <div className="text-primary">
                   <span className="material-symbols-outlined !text-3xl text-glow-cyan">shield</span>
                 </div>
-                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Zerobait</h2>
+                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">{t('app.name')}</h2>
               </div>
               <div className="hidden md:flex flex-1 justify-end items-center gap-6">
                 <nav className="flex items-center gap-2">
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-primary/20" to="/">
                     <span className="material-symbols-outlined text-primary group-hover:text-glow-cyan transition-all duration-300">home</span>
-                    <span className="group-hover:text-glow-cyan transition-all duration-300">Dashboard</span>
+                    <span className="group-hover:text-glow-cyan transition-all duration-300">{t('nav.dashboard')}</span>
                   </Link>
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-secondary/20" to="/games">
                     <span className="material-symbols-outlined text-secondary group-hover:text-glow-magenta transition-all duration-300">gamepad</span>
-                    <span className="group-hover:text-glow-magenta transition-all duration-300">Games</span>
+                    <span className="group-hover:text-glow-magenta transition-all duration-300">{t('nav.games')}</span>
                   </Link>
                 </nav>
                 <div className="w-px h-6 bg-white/20"></div>
                 <div className="flex items-center gap-4 pl-6">
                   {!user ? (
                     <>
-                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">Log In</Link>
+                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">{t('nav.login')}</Link>
                       <Link className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-primary text-black hover:bg-primary/90 transition-all duration-300 text-sm font-bold leading-normal tracking-[0.015em]" to="/signup">
-                        <span className="truncate">Sign Up</span>
+                        <span className="truncate">{t('nav.signup')}</span>
                       </Link>
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-white/80">Hello, <span className="text-primary font-semibold">{user.username ?? 'user'}</span></span>
+                      <span className="text-sm text-white/80">{t('nav.hello_name', { name: user.username ?? 'user' })}</span>
                       <button
                         onClick={() => { logout(); navigate('/') }}
                         className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white/10 px-3 text-xs font-semibold leading-normal text-gray-200 transition-colors hover:bg-white/20"
                       >
-                        Log out
+                        {t('nav.logout')}
                       </button>
                     </div>
                   )}
+                  <div className="ml-2"><LanguageSwitcher /></div>
                 </div>
               </div>
             </header>
@@ -283,18 +287,18 @@ export default function PasswordPuzzlePage() {
                 <div className="space-y-6">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">Password Security Puzzle</p>
-                      <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">Choose your level</h1>
-                      <p className="text-white/70 mt-2 max-w-2xl">Pick a challenge and aim to exceed the target time to crack.</p>
+                      <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">{t('games.pp.label')}</p>
+                      <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">{t('games.pp.choose_title')}</h1>
+                      <p className="text-white/70 mt-2 max-w-2xl">{t('games.pp.choose_desc')}</p>
                     </div>
-                    <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">Back</Link>
+                    <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">{t('common.back')}</Link>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-3">
                     {(['easy','medium','hard'] as Difficulty[]).map((d) => (
                       <div key={d} className="rounded-xl border border-white/10 bg-white/5 p-5 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-white font-bold">{d.charAt(0).toUpperCase()+d.slice(1)}</h3>
-                          <span className="text-xs px-2 py-1 rounded-md bg-white/10 text-white/80">Target: {targetLog10SecondsFor(d).label}</span>
+                          <h3 className="text-white font-bold">{t(`games.difficulty.${d}` as const)}</h3>
+                          <span className="text-xs px-2 py-1 rounded-md bg-white/10 text-white/80">{t('games.pp.target_label')} {targetLog10SecondsFor(d).label}</span>
                         </div>
                         <ul className="text-sm text-white/80 space-y-1">
                           {LEVEL_REQUIREMENTS[d].map((req, idx) => (
@@ -308,7 +312,7 @@ export default function PasswordPuzzlePage() {
                           onClick={() => { setSelectedPieces([]); setDifficulty(d); setShuffleKey((k) => k + 1) }}
                           className="mt-2 flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-bold text-black hover:bg-primary/90 transition-colors"
                         >
-                          Start {d.charAt(0).toUpperCase()+d.slice(1)}
+                          {t('games.pp.start', { level: t(`games.difficulty.${d}` as const) })}
                         </button>
                       </div>
                     ))}
@@ -322,11 +326,11 @@ export default function PasswordPuzzlePage() {
                   {/* Hero with Back */}
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">Password Security Puzzle</p>
-                      <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">Build a password that lasts</h1>
-                      <p className="text-white/70 mt-2 max-w-2xl">Drag pieces into the Password Box. Avoid hidden traps and push your time-to-crack above the target.</p>
+                      <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">{t('games.pp.label')}</p>
+                      <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">{t('games.pp.choose_title')}</h1>
+                      <p className="text-white/70 mt-2 max-w-2xl">{t('games.pp.choose_desc')}</p>
                     </div>
-                    <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">Back</Link>
+                    <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">{t('common.back')}</Link>
                   </div>
 
                   {/* Level requirements & Target */}
@@ -351,13 +355,13 @@ export default function PasswordPuzzlePage() {
                   {/* Feedback */}
                   <div className="rounded-xl border border-white/20 bg-white/5 p-5 flex flex-wrap items-center gap-4">
                     <div className="flex-1 min-w-[220px]">
-                      <div className="text-sm text-white/70">Estimated Time to Crack</div>
+                      <div className="text-sm text-white/70">{t('games.pp.estimated_label')}</div>
                       <div className={`text-2xl font-black ${meetsTarget? 'text-secondary text-glow-magenta' : 'text-white'}`}>
                         {Number.isFinite(log10Seconds) ? humanizeDurationFromLog10Seconds(log10Seconds) : '—'}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button onClick={reset} className="h-10 px-4 rounded-md bg-white/10 hover:bg-white/20 text-sm font-semibold">Reset</button>
+                      <button onClick={reset} className="h-10 px-4 rounded-md bg-white/10 hover:bg-white/20 text-sm font-semibold">{t('games.pp.reset')}</button>
                     </div>
                   </div>
 
@@ -369,7 +373,7 @@ export default function PasswordPuzzlePage() {
                       className="rounded-xl border border-secondary/40 bg-white/5 p-4 min-h-[100px] flex flex-wrap items-center gap-2"
                     >
                       {selectedPieces.length === 0 && (
-                        <span className="text-white/60 text-sm">Drag pieces here to build your password…</span>
+                        <span className="text-white/60 text-sm">{t('games.pp.drag_here')}</span>
                       )}
                       {selectedPieces.map((id, idx) => {
                         const p = pieceById[id]
@@ -384,13 +388,13 @@ export default function PasswordPuzzlePage() {
                       })}
                     </div>
                     <div className="mt-2 text-sm text-white/70">
-                      Password preview: <span className="font-mono text-white/90">{password || '—'}</span>
+                      {t('games.pp.preview')}: <span className="font-mono text-white/90">{password || '—'}</span>
                     </div>
                   </div>
 
                   {/* Pieces Palette (single mixed list) */}
                   <div>
-                    <h3 className="text-white font-bold mb-2">Pieces</h3>
+                    <h3 className="text-white font-bold mb-2">{t('games.pp.pieces_label')}</h3>
                     <div className="flex flex-wrap gap-2">
                       {shuffledPieces.map(p => (
                         <div
@@ -412,20 +416,20 @@ export default function PasswordPuzzlePage() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-3 text-secondary text-glow-magenta">
                           <span className="material-symbols-outlined">trophy</span>
-                          <div className="font-bold">Great job! Your password exceeds the target cracking time.</div>
+                          <div className="font-bold">{t('games.pp.win_title')}</div>
                         </div>
                         <button
                           onClick={finishGame}
                           disabled={finishing}
                           className="h-10 px-4 rounded-md bg-primary text-black font-bold disabled:opacity-70"
                         >
-                          {finishing ? 'Finishing…' : 'Finish'}
+                          {finishing ? t('games.pp.finishing') : t('games.pp.finish')}
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-3 text-white/80">
                         <span className="material-symbols-outlined">hourglass_top</span>
-                        <div className="font-bold">Keep going—add more variety and length to increase time to crack.</div>
+                        <div className="font-bold">{t('games.pp.keep_going')}</div>
                       </div>
                     )}
                   </div>
@@ -436,11 +440,11 @@ export default function PasswordPuzzlePage() {
             {/* Footer */}
             <footer className="mt-auto w-full border-t border-white/10 bg-background-dark/50 py-8 backdrop-blur-sm">
               <div className="mx-auto flex max-w-[960px] flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-10">
-                <p className="text-sm text-white/60">© 2024 Zerobait. All rights reserved.</p>
+                <p className="text-sm text-white/60">{t('footer.copyright')}</p>
                 <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">Privacy Policy</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">About</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">Contact</a>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-primary" to="/privacy">{t('common.privacy')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/about">{t('common.about')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/contact">{t('common.contact')}</Link>
                 </nav>
               </div>
             </footer>

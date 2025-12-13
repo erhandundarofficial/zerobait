@@ -5,11 +5,18 @@ import { computeScore, ensureGameRecords, loadAllGameContents, loadGameContent, 
 
 const router = express.Router()
 
-router.get('/games', async (_req: Request, res: Response) => {
+router.get('/games', async (req: Request, res: Response) => {
   try {
+    const lang = (String((req.query as any).lang || 'tr').toLowerCase() === 'en') ? 'en' : 'tr'
     const contents = await loadAllGameContents()
     await ensureGameRecords(contents)
-    const list = contents.map((c) => ({ key: c.key, title: c.title, description: c.description, type: c.type, difficulty: c.difficulty }))
+    const list = contents.map((c) => ({
+      key: c.key,
+      title: lang === 'tr' ? (c.title_tr || c.title) : c.title,
+      description: lang === 'tr' ? (c.description_tr || c.description) : c.description,
+      type: c.type,
+      difficulty: c.difficulty,
+    }))
     return res.json({ games: list })
   } catch (e) {
     return res.status(500).json({ error: 'Failed to load games' })

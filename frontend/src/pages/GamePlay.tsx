@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 type PublicQuestion = {
   id: string
   prompt: string
   options: string[]
   explanation?: string
+  prompt_tr?: string
+  options_tr?: string[]
+  explanation_tr?: string
 }
 
 // Simple client-side progress tracking
@@ -57,6 +62,8 @@ type PublicGameContent = {
   description: string
   type: string
   difficulty: 'easy' | 'medium' | 'hard'
+  title_tr?: string
+  description_tr?: string
   questions: PublicQuestion[]
 }
 
@@ -64,13 +71,14 @@ export default function GamePlayPage() {
   const { key } = useParams<{ key: string }>()
   const navigate = useNavigate()
   const { user, addScore, logout } = useAuth()
+  const { t, lang } = useI18n()
   const [game, setGame] = useState<PublicGameContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [submitting, setSubmitting] = useState(false)
   const [score, setScore] = useState<number | null>(null)
-  const [started, setStarted] = useState(false)
+  const [started] = useState(true)
 
   useEffect(() => {
     if (!key) return
@@ -150,39 +158,40 @@ export default function GamePlayPage() {
                 <div className="text-primary">
                   <span className="material-symbols-outlined !text-3xl text-glow-cyan">shield</span>
                 </div>
-                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Zerobait</h2>
+                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">{t('app.name')}</h2>
               </div>
               <div className="hidden md:flex flex-1 justify-end items-center gap-6">
                 <nav className="flex items-center gap-2">
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-primary/20" to="/">
                     <span className="material-symbols-outlined text-primary group-hover:text-glow-cyan transition-all duration-300">home</span>
-                    <span className="group-hover:text-glow-cyan transition-all duration-300">Dashboard</span>
+                    <span className="group-hover:text-glow-cyan transition-all duration-300">{t('nav.dashboard')}</span>
                   </Link>
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-secondary/20" to="/games">
                     <span className="material-symbols-outlined text-secondary group-hover:text-glow-magenta transition-all duration-300">gamepad</span>
-                    <span className="group-hover:text-glow-magenta transition-all duration-300">Games</span>
+                    <span className="group-hover:text-glow-magenta transition-all duration-300">{t('nav.games')}</span>
                   </Link>
                 </nav>
                 <div className="w-px h-6 bg-white/20"></div>
                 <div className="flex items-center gap-4 pl-6">
                   {!user ? (
                     <>
-                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">Log In</Link>
+                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">{t('nav.login')}</Link>
                       <Link className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-primary text-black hover:bg-primary/90 transition-all duration-300 text-sm font-bold leading-normal tracking-[0.015em]" to="/signup">
-                        <span className="truncate">Sign Up</span>
+                        <span className="truncate">{t('nav.signup')}</span>
                       </Link>
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-white/80">Hello, <span className="text-primary font-semibold">{user.username ?? 'user'}</span></span>
+                      <span className="text-sm text-white/80">{t('nav.hello_name', { name: user.username ?? 'user' })}</span>
                       <button
                         onClick={() => { logout(); navigate('/'); }}
                         className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white/10 px-3 text-xs font-semibold leading-normal text-gray-200 transition-colors hover:bg-white/20"
                       >
-                        Log out
+                        {t('nav.logout')}
                       </button>
                     </div>
                   )}
+                  <div className="ml-2"><LanguageSwitcher /></div>
                 </div>
               </div>
             </header>
@@ -190,7 +199,7 @@ export default function GamePlayPage() {
             {/* Main content */}
             <main className="flex-grow">
               {/* Loading/Error States */}
-              {loading && <p className="mt-8 text-center text-white/80">Loading…</p>}
+              {loading && <p className="mt-8 text-center text-white/80">{t('games.loading')}</p>}
               {error && <p className="mt-8 text-center text-red-400">{error}</p>}
 
               {!loading && !error && (
@@ -199,33 +208,16 @@ export default function GamePlayPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-secondary font-bold uppercase tracking-wider text-glow-magenta">Game</p>
-                      <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">{game?.title}</h1>
-                      <p className="text-white/70 mt-2 max-w-2xl">{game?.description}</p>
+                      <h1 className="text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.03em]">{lang === 'tr' ? (game?.title_tr ?? game?.title) : game?.title}</h1>
+                      <p className="text-white/70 mt-2 max-w-2xl">{lang === 'tr' ? (game?.description_tr ?? game?.description) : game?.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs px-2 py-1 rounded-md bg-white/10 text-white/80 uppercase">{game?.difficulty}</span>
-                      <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">Back</Link>
+                      <Link to="/games" className="text-sm font-bold text-secondary hover:text-white transition-colors">{t('common.back')}</Link>
                     </div>
                   </div>
 
-                  {/* Game Surface Placeholder */}
-                  {started && (
-                    <div className="rounded-xl border border-secondary/30 bg-white/5 overflow-hidden">
-                      <div className="aspect-video w-full grid place-items-center bg-[radial-gradient(circle_at_center,rgba(255,0,255,0.15),transparent_60%)]">
-                        <span className="text-white/70">Game canvas placeholder</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CTA */}
-                  {!started && (
-                    <button
-                      onClick={() => setStarted(true)}
-                      className="flex min-w-[200px] max-w-[360px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-black text-base font-bold leading-normal tracking-[0.015em] glow-cyan transition-all hover:scale-105"
-                    >
-                      <span className="truncate">Start Game</span>
-                    </button>
-                  )}
+                  
 
                   {/* Quiz/Questions (as current implementation) */}
                   {started && game && (
@@ -234,11 +226,11 @@ export default function GamePlayPage() {
                         {game.questions.map((q, qi) => (
                           <div key={q.id} className="rounded-xl border border-white/10 bg-white/5 p-5">
                             <div className="flex items-start justify-between gap-4">
-                              <h3 className="text-white font-semibold">Q{qi + 1}. {q.prompt}</h3>
+                              <h3 className="text-white font-semibold">Q{qi + 1}. {lang === 'tr' ? (q.prompt_tr ?? q.prompt) : q.prompt}</h3>
                               <span className="text-xs px-2 py-1 rounded-md bg-white/10 text-gray-200 uppercase">{game.difficulty}</span>
                             </div>
                             <div className="mt-4 grid gap-2">
-                              {q.options.map((opt, idx) => (
+                              {(lang === 'tr' ? (q.options_tr ?? q.options) : q.options).map((opt, idx) => (
                                 <label key={idx} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 cursor-pointer hover:border-secondary/40">
                                   <input
                                     type="radio"
@@ -251,7 +243,7 @@ export default function GamePlayPage() {
                                 </label>
                               ))}
                             </div>
-                            {q.explanation && <p className="mt-2 text-xs text-gray-400">Hint: {q.explanation}</p>}
+                            {(q.explanation || q.explanation_tr) && <p className="mt-2 text-xs text-gray-400">{t('game.hint')}: {lang === 'tr' ? (q.explanation_tr ?? q.explanation) : q.explanation}</p>}
                           </div>
                         ))}
                       </div>
@@ -262,10 +254,10 @@ export default function GamePlayPage() {
                           disabled={submitting || !allAnswered}
                           className="flex h-12 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-emerald-400 px-6 text-base font-bold leading-normal text-gray-900 transition-colors hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                          {submitting ? 'Submitting…' : 'Submit Answers'}
+                          {submitting ? t('game.submitting') : t('game.submit')}
                         </button>
                         {score !== null && (
-                          <span className="text-gray-200">Your score: <span className="text-emerald-300 font-semibold">{score}</span></span>
+                          <span className="text-gray-200">{t('game.your_score')}: <span className="text-emerald-300 font-semibold">{score}</span></span>
                         )}
                       </div>
                     </>
@@ -277,11 +269,11 @@ export default function GamePlayPage() {
             {/* Footer */}
             <footer className="mt-auto w-full border-t border-white/10 bg-background-dark/50 py-8 backdrop-blur-sm">
               <div className="mx-auto flex max-w-[960px] flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-10">
-                <p className="text-sm text-white/60">© 2024 Zerobait. All rights reserved.</p>
+                <p className="text-sm text-white/60">{t('footer.copyright')}</p>
                 <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">Privacy Policy</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">About</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">Contact</a>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-primary" to="/privacy">{t('common.privacy')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/about">{t('common.about')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/contact">{t('common.contact')}</Link>
                 </nav>
               </div>
             </footer>

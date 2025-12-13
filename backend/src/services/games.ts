@@ -11,6 +11,10 @@ export type Question = {
   options: string[]
   correctIndex: number
   explanation?: string
+  // optional Turkish translations
+  prompt_tr?: string
+  options_tr?: string[]
+  explanation_tr?: string
 }
 
 export type GameContent = {
@@ -20,6 +24,9 @@ export type GameContent = {
   type: GameType
   difficulty: Difficulty
   questions: Question[]
+  // optional Turkish translations
+  title_tr?: string
+  description_tr?: string
 }
 
 export type PublicQuestion = Omit<Question, 'correctIndex'>
@@ -56,11 +63,16 @@ export function toPublic(content: GameContent): PublicGameContent {
     description: content.description,
     type: content.type,
     difficulty: content.difficulty,
+    ...(content.title_tr ? { title_tr: content.title_tr } : {}),
+    ...(content.description_tr ? { description_tr: content.description_tr } : {}),
     questions: content.questions.map((q) => ({
       id: q.id,
       prompt: q.prompt,
       options: q.options,
       ...(q.explanation ? { explanation: q.explanation } : {}),
+      ...(q.prompt_tr ? { prompt_tr: q.prompt_tr } : {}),
+      ...(q.options_tr ? { options_tr: q.options_tr } : {}),
+      ...(q.explanation_tr ? { explanation_tr: q.explanation_tr } : {}),
     })),
   }
 }

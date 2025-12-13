@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 type AiScanResponse = {
   ai_summary: string
@@ -11,6 +13,7 @@ type AiScanResponse = {
 export default function HomePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { t, lang } = useI18n()
   const [url, setUrl] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [aiResult, setAiResult] = useState<AiScanResponse | null>(null)
@@ -18,6 +21,9 @@ export default function HomePage() {
   const [isReporting, setIsReporting] = useState(false)
   const [reportMessage, setReportMessage] = useState<string | null>(null)
   const [lastScannedUrl, setLastScannedUrl] = useState<string | null>(null)
+  const [showRaw, setShowRaw] = useState(false)
+  const resultRef = useRef<HTMLDivElement | null>(null)
+  const [showAnim, setShowAnim] = useState(false)
 
   function tryNormalize(raw: string): { ok: true; value: string } | { ok: false; error: string } {
     let s = (raw || '').trim()
@@ -52,6 +58,7 @@ export default function HomePage() {
   async function handleScan() {
     setScanError(null)
     setReportMessage(null)
+    setShowAnim(false)
     const norm = tryNormalize(url)
     if (!norm.ok) {
       setScanError(norm.error)
@@ -64,7 +71,7 @@ export default function HomePage() {
       const response = await fetch('http://localhost:4000/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: normalized }),
+        body: JSON.stringify({ url: normalized, lang }),
       })
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
@@ -116,7 +123,43 @@ export default function HomePage() {
   }
   const resultCardClasses = boxClasses[riskLevel]
   const resultIcon = isIdle ? 'help' : riskLevel === 'HIGH' ? 'gpp_bad' : riskLevel === 'MEDIUM' ? 'warning' : 'verified_user'
-  const resultTitle = isIdle ? 'READY TO SCAN' : riskLevel === 'HIGH' ? 'HIGH RISK' : riskLevel === 'MEDIUM' ? 'MODERATE RISK' : 'LOW RISK'
+  const resultTitle = isIdle
+    ? t('risk.ready')
+    : riskLevel === 'HIGH'
+    ? t('risk.high')
+    : riskLevel === 'MEDIUM'
+    ? t('risk.medium')
+    : t('risk.low')
+
+  const tech: any = aiResult?.technical_details || {}
+  const vtStats = tech?.virusTotal?.data?.attributes?.last_analysis_stats ?? tech?.virusTotal ?? null
+  const vtMal = Number(vtStats?.malicious ?? 0)
+  const vtSusp = Number(vtStats?.suspicious ?? 0)
+  const vtUndet = Number(vtStats?.undetected ?? 0)
+  const vtHarm = Number(vtStats?.harmless ?? 0)
+  const vtTout = Number(vtStats?.timeout ?? 0)
+  const vtTotal = vtMal + vtSusp + vtUndet + vtHarm + vtTout
+  const vtPct = (n: number) => (vtTotal > 0 ? Math.round((n / vtTotal) * 100) : 0)
+
+  const ssl = tech?.sslLabs
+  const sslStatus: string | undefined = ssl?.statusMessage || ssl?.status
+  const sslEndpoints: any[] = Array.isArray(ssl?.endpoints) ? ssl.endpoints : []
+  const sslUpCount = sslEndpoints.filter((e) => (e.status ?? '').toLowerCase() === 'ready').length
+
+  const whois = tech?.whois?.WhoisRecord || tech?.whois?.WhoisRecord?.registryData || tech?.whois || null
+  const createdRaw: string | undefined = whois?.createdDate || whois?.registryData?.createdDate || whois?.domainCreatedDate
+  const createdAt = createdRaw ? new Date(createdRaw) : null
+  const now = new Date()
+  const domainAgeDays = createdAt ? Math.max(0, Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))) : null
+  const ageLabel = domainAgeDays !== null ? (domainAgeDays < 30 ? 'very new' : domainAgeDays < 180 ? 'new' : 'established') : 'unknown'
+
+  useEffect(() => {
+    if (aiResult && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      resultRef.current.focus({ preventScroll: true })
+      setTimeout(() => setShowAnim(true), 10)
+    }
+  }, [aiResult])
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark font-display text-white">
@@ -134,39 +177,40 @@ export default function HomePage() {
                 <div className="text-primary">
                   <span className="material-symbols-outlined !text-3xl text-glow-cyan">shield</span>
                 </div>
-                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Zerobait</h2>
+                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">{t('app.name')}</h2>
               </div>
               <div className="hidden md:flex flex-1 justify-end items-center gap-6">
                 <nav className="flex items-center gap-2">
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-primary/20" to="/">
                     <span className="material-symbols-outlined text-primary group-hover:text-glow-cyan transition-all duration-300">home</span>
-                    <span className="group-hover:text-glow-cyan transition-all duration-300">Dashboard</span>
+                    <span className="group-hover:text-glow-cyan transition-all duration-300">{t('nav.dashboard')}</span>
                   </Link>
                   <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal flex items-center gap-2 group px-4 py-2 rounded-md hover:bg-secondary/20" to="/games">
                     <span className="material-symbols-outlined text-secondary group-hover:text-glow-magenta transition-all duration-300">gamepad</span>
-                    <span className="group-hover:text-glow-magenta transition-all duration-300">Games</span>
+                    <span className="group-hover:text-glow-magenta transition-all duration-300">{t('nav.games')}</span>
                   </Link>
                 </nav>
                 <div className="w-px h-6 bg-white/20"></div>
                 <div className="flex items-center gap-4 pl-6">
                   {!user ? (
                     <>
-                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">Log In</Link>
+                      <Link className="text-white/80 hover:text-white transition-colors text-sm font-bold leading-normal px-4 py-2 rounded-md hover:bg-white/10" to="/login">{t('nav.login')}</Link>
                       <Link className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-primary text-black hover:bg-primary/90 transition-all duration-300 text-sm font-bold leading-normal tracking-[0.015em]" to="/signup">
-                        <span className="truncate">Sign Up</span>
+                        <span className="truncate">{t('nav.signup')}</span>
                       </Link>
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-white/80">Hello, <span className="text-primary font-semibold">{user.username ?? 'user'}</span></span>
+                      <span className="text-sm text-white/80">{t('nav.hello_name', { name: user.username ?? 'user' })}</span>
                       <button
                         onClick={() => { logout(); navigate('/'); }}
                         className="flex h-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white/10 px-3 text-xs font-semibold leading-normal text-gray-200 transition-colors hover:bg-white/20"
                       >
-                        Log out
+                        {t('nav.logout')}
                       </button>
                     </div>
                   )}
+                  <div className="ml-2"><LanguageSwitcher /></div>
                 </div>
               </div>
             </header>
@@ -177,10 +221,10 @@ export default function HomePage() {
                   <div className="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat xs:gap-8 items-center justify-center p-4">
                     <div className="flex flex-col gap-2 text-center">
                       <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] xs:text-5xl xs:leading-tight xs:tracking-[-0.033em]">
-                        Scan URL for Phishing Threats
+                        {t('home.hero_title')}
                       </h1>
                       <h2 className="text-white/70 text-sm font-normal leading-normal xs:text-base xs:leading-normal">
-                        Enter a URL below to check for potential phishing threats in real-time.
+                        {t('home.hero_subtitle')}
                       </h2>
                     </div>
                     <div className="w-full max-w-[600px] flex flex-col items-center gap-6">
@@ -192,7 +236,7 @@ export default function HomePage() {
                           </div>
                           <input
                             className="relative z-10 flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-none text-white focus:outline-0 focus:ring-0 border-none bg-transparent h-full placeholder:text-white/50 px-4 text-sm xs:text-base"
-                            placeholder="Enter URL to scan (e.g., https://example.com)"
+                            placeholder={t('home.input_placeholder')}
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                             onPaste={(e) => {
@@ -212,13 +256,13 @@ export default function HomePage() {
                         className="flex min-w-[200px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-black text-base font-bold leading-normal tracking-[0.015em] glow-cyan transition-all hover:scale-105 disabled:opacity-60"
                         disabled={isScanning}
                       >
-                        <span className="truncate">{isScanning ? 'Scanning…' : 'Scan Now'}</span>
+                        <span className="truncate">{isScanning ? t('home.button_scanning') : t('home.button_scan')}</span>
                       </button>
 
                       {/* Result Card */}
-                      <div className="w-full">
+                      <div className="w-full scroll-mt-24" ref={resultRef} tabIndex={-1} id="scan-result">
                         <div
-                          className={`flex flex-col items-center gap-6 rounded-xl border p-6 text-center sm:p-8 ${resultCardClasses}`}
+                          className={`flex flex-col items-center gap-6 rounded-xl border p-6 text-center sm:p-8 ${resultCardClasses} transition-all duration-300 ease-out ${showAnim ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
                         >
                           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
                             <span className="material-symbols-outlined text-4xl">{resultIcon}</span>
@@ -226,7 +270,7 @@ export default function HomePage() {
                           <div className="space-y-2">
                             <h3 className="text-2xl font-bold">{resultTitle}</h3>
                             <p className="text-white/90">
-                              {aiResult ? `URL: ${lastScannedUrl}` : 'Scan a URL to see results from the Zerobait engine.'}
+                              {aiResult ? `URL: ${lastScannedUrl}` : t('home.idle_desc')}
                             </p>
                             {aiResult && (
                               <p className="text-white/95 text-lg font-semibold max-w-3xl mx-auto">{aiResult.ai_summary}</p>
@@ -234,7 +278,7 @@ export default function HomePage() {
                             {aiResult && (
                               <div className="mt-4 w-full max-w-[560px] mx-auto text-left">
                                 <div className="mb-2 flex items-center justify-between text-sm">
-                                  <span className="font-semibold">Risk Score</span>
+                                  <span className="font-semibold">{t('risk.score_label')}</span>
                                   <span>{risk}/100</span>
                                 </div>
                                 <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden">
@@ -257,7 +301,7 @@ export default function HomePage() {
                           className="group mt-8 flex cursor-pointer items-center gap-2 text-secondary transition-colors duration-300 hover:text-white"
                         >
                           <span className="material-symbols-outlined text-secondary group-hover:text-white transition-colors duration-300">flag</span>
-                          <span className="text-sm font-bold tracking-wide underline decoration-dotted underline-offset-4">Report this URL</span>
+                          <span className="text-sm font-bold tracking-wide underline decoration-dotted underline-offset-4">{t('home.report_link')}</span>
                         </button>
                       )}
                       {reportMessage && <p className="mt-2 text-sm text-white/80">{reportMessage}</p>}
@@ -265,41 +309,112 @@ export default function HomePage() {
                     {scanError && <p className="mt-2 text-sm text-red-400">{scanError}</p>}
 
                     {aiResult && (
-                      <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 w-full">
-                        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                          <h4 className="mb-2 text-sm font-bold text-white/90">VirusTotal</h4>
-                          <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs text-white/80">
-{JSON.stringify(aiResult.technical_details?.virusTotal?.data?.attributes?.last_analysis_stats ?? aiResult.technical_details?.virusTotal, null, 2)}
-                          </pre>
+                      <div className={`mt-10 space-y-6 w-full transition-all duration-300 ease-out ${showAnim ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-bold text-white/90 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-secondary">security</span>
+                                VirusTotal
+                              </h4>
+                              <span className="text-xs text-white/70">{vtTotal > 0 ? `${vtMal + vtSusp} flagged / ${vtTotal} vendors` : t('home.no_vendor')}</span>
+                            </div>
+                            {vtTotal > 0 ? (
+                              <>
+                                <div className="h-3 w-full overflow-hidden rounded-full bg-white/10 flex">
+                                  <div className="h-full bg-red-500" style={{ width: `${vtPct(vtMal)}%` }} />
+                                  <div className="h-full bg-yellow-400" style={{ width: `${vtPct(vtSusp)}%` }} />
+                                  <div className="h-full bg-emerald-400/80" style={{ width: `${vtPct(vtHarm)}%` }} />
+                                  <div className="h-full bg-white/20" style={{ width: `${vtPct(vtUndet + vtTout)}%` }} />
+                                </div>
+                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/80">
+                                  <div className="flex items-center gap-2"><span className="size-2 rounded-full bg-red-500"></span> Malicious: <span className="font-semibold">{vtMal}</span></div>
+                                  <div className="flex items-center gap-2"><span className="size-2 rounded-full bg-yellow-400"></span> Suspicious: <span className="font-semibold">{vtSusp}</span></div>
+                                  <div className="flex items-center gap-2"><span className="size-2 rounded-full bg-emerald-400/80"></span> Harmless: <span className="font-semibold">{vtHarm}</span></div>
+                                  <div className="flex items-center gap-2"><span className="size-2 rounded-full bg-white/40"></span> Undetected/Timeout: <span className="font-semibold">{vtUndet + vtTout}</span></div>
+                                </div>
+                              </>
+                            ) : (
+                              <p className="text-sm text-white/70">{t('home.waiting_vendor')}</p>
+                            )}
+                          </div>
+
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-bold text-white/90 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-secondary">https</span>
+                                SSL Labs
+                              </h4>
+                              <span className="text-xs text-white/70">{sslStatus ? String(sslStatus) : 'No status'}{sslEndpoints.length ? ` • ${sslUpCount}/${sslEndpoints.length} ready` : ''}</span>
+                            </div>
+                            {sslEndpoints.length ? (
+                              <div className="flex flex-wrap gap-2">
+                                {sslEndpoints.map((e: any, idx: number) => (
+                                  <span key={idx} className="text-xs px-2 py-1 rounded-md border border-white/10 bg-white/5 text-white/80">
+                                    {e.ipAddress || e.serverName || 'endpoint'} • {e.status || 'unknown'} {e.grade ? `• ${e.grade}` : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-white/70">No endpoints yet.</p>
+                            )}
+                          </div>
+
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-5 sm:col-span-2">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-bold text-white/90 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-secondary">schedule</span>
+                                WHOIS (Domain Age)
+                              </h4>
+                              <span className="text-xs text-white/70">{domainAgeDays !== null ? `${domainAgeDays} days` : 'unknown'}</span>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden">
+                                <div
+                                  className={`h-full ${domainAgeDays !== null && domainAgeDays < 30 ? 'bg-red-500' : domainAgeDays !== null && domainAgeDays < 180 ? 'bg-yellow-400' : 'bg-emerald-400'}`}
+                                  style={{ width: `${Math.max(8, Math.min(100, (domainAgeDays ?? 0) / 365 * 100))}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-white/80">This domain appears <span className="font-semibold">{ageLabel}</span>. Newer domains are often riskier.</div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                          <h4 className="mb-2 text-sm font-bold text-white/90">SSL Labs</h4>
-                          <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs text-white/80">
-{JSON.stringify(aiResult.technical_details?.sslLabs?.endpoints ?? aiResult.technical_details?.sslLabs, null, 2)}
-                          </pre>
-                        </div>
-                        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                          <h4 className="mb-2 text-sm font-bold text-white/90">WHOIS (Domain)</h4>
-                          <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs text-white/80">
-{JSON.stringify(
-  aiResult.technical_details?.whois?.WhoisRecord?.createdDate ??
-    aiResult.technical_details?.whois?.WhoisRecord?.registryData?.createdDate ??
-    aiResult.technical_details?.whois,
-  null,
-  2,
-)}
-                          </pre>
-                        </div>
+
                         {aiResult.technical_details?.screenshot?.base64 && (
                           <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col items-center">
                             <h4 className="mb-2 text-sm font-bold text-white/90">Screenshot</h4>
                             <img
                               src={`data:image/png;base64,${aiResult.technical_details.screenshot.base64}`}
                               alt="Website screenshot"
-                              className="max-h-64 w-auto rounded-lg border border-white/10"
+                              className="max-h-80 w-auto rounded-lg border border-white/10"
                             />
                           </div>
                         )}
+
+                        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-white/90">{t('home.raw_title')}</h4>
+                            <button
+                              onClick={() => setShowRaw((v) => !v)}
+                              className="text-xs font-semibold text-secondary hover:text-white"
+                            >
+                              {showRaw ? t('common.hide') : t('common.show')}
+                            </button>
+                          </div>
+                          {showRaw && (
+                            <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                              <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs text-white/80 border border-white/10 rounded-lg p-3 bg-black/20">
+{JSON.stringify(aiResult.technical_details?.virusTotal, null, 2)}
+                              </pre>
+                              <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs text-white/80 border border-white/10 rounded-lg p-3 bg-black/20">
+{JSON.stringify(aiResult.technical_details?.sslLabs, null, 2)}
+                              </pre>
+                              <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words text-xs text-white/80 border border-white/10 rounded-lg p-3 bg-black/20 sm:col-span-2">
+{JSON.stringify(aiResult.technical_details?.whois, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -309,11 +424,11 @@ export default function HomePage() {
 
             <footer className="mt-auto w-full border-t border-white/10 bg-background-dark/50 py-8 backdrop-blur-sm">
               <div className="mx-auto flex max-w-[960px] flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-10">
-                <p className="text-sm text-white/60">© 2024 Zerobait. All rights reserved.</p>
+                <p className="text-sm text-white/60">{t('footer.copyright')}</p>
                 <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">Privacy Policy</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">About</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">Contact</a>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-primary" to="/privacy">{t('common.privacy')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/about">{t('common.about')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/contact">{t('common.contact')}</Link>
                 </nav>
               </div>
             </footer>
