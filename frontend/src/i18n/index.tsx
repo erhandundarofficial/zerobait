@@ -210,6 +210,30 @@ const resources: Record<Lang, Dict> = {
       your_score: 'Your score',
       hint: 'Hint',
     },
+    pages: {
+      privacy: {
+        title: 'Privacy Policy',
+        updated: 'Last updated: 2024',
+        p1: 'We value your privacy. Zerobait processes the minimum amount of personal data needed to provide phishing detection and education.',
+        p2: 'We may collect usage analytics to improve the product. We do not sell your data. Any third-party services are listed in the documentation.',
+        p3: 'You can request deletion of your account data at any time by contacting us.',
+        p4: 'Changes to this policy will be posted on this page with a revised date.',
+      },
+      about: {
+        title: 'About Zerobait',
+        subtitle: 'Phishing detection and gamified education for everyone.',
+        p1: 'Zerobait helps people spot phishing with a fast URL scanner and bite-sized games.',
+        p2: 'We combine practical scanning tools with playful challenges to build instincts safely.',
+        p3: 'Our mission is to make web safety accessible and engaging.',
+      },
+      contact: {
+        title: 'Contact Us',
+        subtitle: 'We’d love to hear from you.',
+        p1: 'For support, feedback, or partnership inquiries, please reach out.',
+        p2: 'Email: support@zerobait.app',
+        p3: 'We aim to respond within 2–3 business days.',
+      },
+    },
   },
   tr: {
     app: { name: 'Zerobait' },
@@ -402,6 +426,30 @@ const resources: Record<Lang, Dict> = {
       submitting: 'Gönderiliyor…',
       your_score: 'Puanın',
       hint: 'İpucu',
+    },
+    pages: {
+      privacy: {
+        title: 'Gizlilik Politikası',
+        updated: 'Son güncelleme: 2024',
+        p1: 'Gizliliğinize değer veriyoruz. Zerobait, oltalama tespiti ve eğitim sunmak için yalnızca gerekli asgari kişisel veriyi işler.',
+        p2: 'Ürünü geliştirmek için kullanım analizleri toplayabiliriz. Verilerinizi satmayız. Üçüncü taraf hizmetler belgelerde listelenir.',
+        p3: 'Hesap verilerinizin silinmesini istediğiniz zaman talep edebilirsiniz.',
+        p4: 'Bu politikanın değişiklikleri, güncellenmiş tarih ile bu sayfada yayımlanacaktır.',
+      },
+      about: {
+        title: 'Zerobait Hakkında',
+        subtitle: 'Herkes için oltalama tespiti ve oyunlaştırılmış eğitim.',
+        p1: 'Zerobait, hızlı URL tarayıcısı ve kısa oyunlarla insanların oltalamayı fark etmesine yardımcı olur.',
+        p2: 'Pratik tarama araçlarını eğlenceli meydan okumalarla birleştirerek içgüdüleri güvenle geliştiriyoruz.',
+        p3: 'Amacımız web güvenliğini erişilebilir ve çekici hale getirmektir.',
+      },
+      contact: {
+        title: 'Bize Ulaşın',
+        subtitle: 'Sizden haber almayı çok isteriz.',
+        p1: 'Destek, geri bildirim veya iş ortaklığı talepleriniz için lütfen iletişime geçin.',
+        p2: 'E-posta: support@zerobait.app',
+        p3: 'Yanıt süremiz 2–3 iş günüdür.',
+      },
     },
   },
 }

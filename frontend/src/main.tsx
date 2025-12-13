@@ -16,6 +16,9 @@ import LoginPage from './pages/Login.tsx'
 import SignupPage from './pages/Signup.tsx'
 import HomePage from './pages/Home.tsx'
 import { LanguageProvider } from './i18n'
+import PrivacyPage from './pages/Privacy.tsx'
+import AboutPage from './pages/About.tsx'
+import ContactPage from './pages/Contact.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -35,6 +38,9 @@ createRoot(document.getElementById('root')!).render(
               <Route path="progress" element={<ProgressPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="signup" element={<SignupPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="contact" element={<ContactPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

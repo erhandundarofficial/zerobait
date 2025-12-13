@@ -175,9 +175,9 @@ export default function SignupPage() {
               <div className="mx-auto flex max-w-[960px] flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-10">
                 <p className="text-sm text-white/60">{t('footer.copyright')}</p>
                 <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-primary" href="#">{t('common.privacy')}</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">{t('common.about')}</a>
-                  <a className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" href="#">{t('common.contact')}</a>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-primary" to="/privacy">{t('common.privacy')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/about">{t('common.about')}</Link>
+                  <Link className="text-sm font-medium text-white/80 transition-colors hover:text-secondary" to="/contact">{t('common.contact')}</Link>
                 </nav>
               </div>
             </footer>
